@@ -1,3 +1,4 @@
+import { ImageOff } from 'lucide-react';
 import type { IMediaItem } from '../services/api';
 
 interface MediaCardProps {
@@ -25,7 +26,9 @@ export function MediaCard({ mediaItem, onSelect }: MediaCardProps) {
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-zinc-700 font-bold text-xs">SEM CAPA</div>
+          <div className="w-full h-full flex items-center justify-center text-zinc-700 font-bold text-xs">
+            <ImageOff size={32} />
+          </div>
         )}
 
         {/* "Completed" Badge (Top right) */}
