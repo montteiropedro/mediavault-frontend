@@ -10,7 +10,6 @@ interface VideoModalProps {
 export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  console.log('media:', mediaItem);
   const initialTime = mediaItem?.user_progress_seconds || 0;
   const lastSavedTime = useRef<number>(initialTime);
 
