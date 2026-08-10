@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { X, Play, Pause, RotateCcw, RotateCw, Volume2, VolumeX, Maximize } from 'lucide-react';
+import { X, Play, Pause, RotateCcw, RotateCw, Volume2, VolumeX, Maximize, Captions } from 'lucide-react';
 import { mediaItemsService, type IMediaItem } from '../services/api';
 
 interface VideoModalProps {
@@ -16,6 +16,10 @@ export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalP
   const [isMuted, setIsMuted] = useState(false);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
+
+  // Subtitle track states
+  const [activeSubtitleText, setActiveSubtitleText] = useState<string>('');
+  const [selectedSubtitleTrackIndex, setSelectedSubtitleTrackIndex] = useState<string>('off');
 
   const initialTime = mediaItem?.user_progress_seconds || 0;
   const currentProgressRef = useRef<number>(initialTime);
@@ -63,9 +67,9 @@ export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalP
     }
   };
 
-  //================//
-  // Track metadata //
-  //================//
+  //================================================//
+  // Track metadata / Track detection and switching //
+  //================================================//
 
   const handleLoadedMetadata = () => {
     if (!videoRef.current) return;
@@ -79,6 +83,58 @@ export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalP
       videoRef.current.currentTime = initialTime;
     }
   };
+
+  const handleSubtitleChange = (trackIndex: string) => {
+    setSelectedSubtitleTrackIndex(trackIndex);
+    setActiveSubtitleText('');
+
+    if (!videoRef.current) return;
+
+    const tracks = Array.from(videoRef.current.textTracks);
+
+    tracks.forEach((track, index) => {
+      if (trackIndex !== 'off' && index === Number(trackIndex)) {
+        track.mode = 'hidden';
+      } else {
+        track.mode = 'disabled';
+      }
+    });
+  };
+
+  // Monitors cue changes on the selected track.
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const handleCueChange = () => {
+      const tracks = video.textTracks;
+      let activeText = '';
+
+      for (const track of tracks) {
+        if (track.mode === 'showing' || track.mode === 'hidden') {
+          const cue = track.activeCues?.[0] as VTTCue | undefined;
+
+          if (cue) {
+            activeText = cue.text;
+            break;
+          }
+        }
+      }
+
+      setActiveSubtitleText(activeText);
+    };
+
+    const tracks = Array.from(video.textTracks);
+    tracks.forEach((track) => {
+      track.oncuechange = handleCueChange;
+    });
+
+    return () => {
+      tracks.forEach((track) => {
+        track.oncuechange = null;
+      });
+    };
+  }, [selectedSubtitleTrackIndex]);
 
   //=========================//
   // Persistence of progress //
@@ -165,6 +221,7 @@ export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalP
         <video
           ref={videoRef}
           src={mediaItem.video_url}
+          crossOrigin="anonymous"
           autoPlay
           onLoadedMetadata={handleLoadedMetadata}
           onTimeUpdate={handleTimeUpdate}
@@ -175,7 +232,28 @@ export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalP
             }
           }}
           className="w-full h-full object-contain"
-        />
+        >
+          {mediaItem.subtitles.map((subtitle) => (
+            <track
+              key={subtitle.id}
+              kind="subtitles"
+              src={`http://localhost:3000/api/v1/media_items/${mediaItem.id}/subtitles/${subtitle.id}`}
+              srcLang={subtitle.language}
+              label={subtitle.label}
+            />
+          ))}
+        </video>
+
+        {/* Custom subtitle overlay */}
+        {activeSubtitleText && (
+          <div
+            className={`absolute z-10 left-1/2 -translate-x-1/2 max-w-[85%] text-center pointer-events-none transition-all duration-200 bottom-34`}
+          >
+            <span className="inline-block text-white font-bold text-base md:text-lg lg:text-4xl px-3 py-1.5 rounded-md text-outline leading-snug whitespace-pre-line">
+              {activeSubtitleText}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Control overlay */}
@@ -240,6 +318,25 @@ export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalP
             <span className="text-lg font-semibold text-zinc-200 truncate">{mediaItem.title}</span>
 
             <div className="text-zinc-400 flex items-center gap-3">
+              {/* Subtitle selector */}
+              <div className="flex flex-row-reverse items-center gap-1">
+                <select
+                  value={selectedSubtitleTrackIndex}
+                  onChange={(e) => handleSubtitleChange(e.target.value)}
+                  className="peer bg-transparent text-xs hover:text-white outline-none cursor-pointer"
+                >
+                  <option value="off" className="text-black">
+                    Desativada
+                  </option>
+                  {mediaItem.subtitles.map((subtitle) => (
+                    <option key={subtitle.id} value={subtitle.id} className="text-black">
+                      {subtitle.label}
+                    </option>
+                  ))}
+                </select>
+                <Captions className="size-8 peer-hover:text-white" />
+              </div>
+
               {/* Fullscreen */}
               <button onClick={toggleFullscreen} className="hover:text-white cursor-pointer">
                 <Maximize className="size-8" />
