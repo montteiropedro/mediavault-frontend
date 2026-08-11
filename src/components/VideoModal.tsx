@@ -1,5 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
-import { X, Play, Pause, RotateCcw, RotateCw, Volume2, VolumeX, Maximize, Captions } from 'lucide-react';
+import {
+  X,
+  Play,
+  Pause,
+  RotateCcw,
+  RotateCw,
+  Volume2,
+  VolumeX,
+  Maximize,
+  Captions,
+  Disc,
+  LoaderCircle,
+} from 'lucide-react';
 import { mediaItemsService, type IMediaItem } from '../services/api';
 
 interface VideoModalProps {
@@ -11,11 +23,16 @@ interface VideoModalProps {
 export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalProps) {
   const videoContainerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
 
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
+
+  // Audio track states
+  const [selectedAudioTrackIndex, setSelectedAudioTrackIndex] = useState<string>('default');
+  const [isAudioTrackLoading, setIsAudioTrackLoading] = useState<boolean>(false);
 
   // Subtitle track states
   const [activeSubtitleText, setActiveSubtitleText] = useState<string>('');
@@ -83,6 +100,142 @@ export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalP
       videoRef.current.currentTime = initialTime;
     }
   };
+
+  const handleAudioLoadedMetadata = () => {
+    const video = videoRef.current;
+    const audio = audioRef.current;
+
+    if (!video || !audio) return;
+
+    audio.currentTime = video.currentTime;
+  };
+
+  const waitForCanPlay = (media: HTMLMediaElement): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      const cleanup = () => {
+        media.removeEventListener('canplay', onCanPlay);
+        media.removeEventListener('error', onError);
+      };
+      const onCanPlay = () => {
+        cleanup();
+        resolve();
+      };
+      const onError = () => {
+        cleanup();
+        reject(media.error ?? new Error('Failed to load audio'));
+      };
+      media.addEventListener('canplay', onCanPlay);
+      media.addEventListener('error', onError);
+    });
+  };
+
+  const handleAudioChange = async (trackIndex: string) => {
+    const video = videoRef.current;
+    const audio = audioRef.current;
+
+    if (!video || !audio || !mediaItem) return;
+
+    setSelectedAudioTrackIndex(trackIndex);
+
+    const videoWasPlaying = !video.paused;
+    video.pause();
+
+    if (trackIndex === 'default') {
+      audio.pause();
+      audio.removeAttribute('src');
+      audio.load();
+      video.muted = false;
+
+      if (videoWasPlaying) {
+        await video.play().catch((error) => {
+          console.error('Error resuming video:', error);
+        });
+      }
+      return;
+    }
+
+    const videoCurrentTime = video.currentTime;
+
+    setIsAudioTrackLoading(true);
+
+    try {
+      audio.src = `http://localhost:3000/api/v1/media_items/${mediaItem.id}/stream_audio/${trackIndex}`;
+      audio.muted = false;
+      audio.volume = 1;
+
+      await waitForCanPlay(audio);
+
+      audio.currentTime = videoCurrentTime;
+      video.currentTime = videoCurrentTime;
+      video.muted = true;
+
+      if (videoWasPlaying) {
+        await Promise.all([audio.play(), video.play()]);
+      }
+    } catch (error) {
+      console.error('Error loading selected audio track:', error);
+      setSelectedAudioTrackIndex('default');
+      video.muted = false;
+    } finally {
+      setIsAudioTrackLoading(false);
+    }
+  };
+
+  // Monitors video changes to sync audio.
+  useEffect(() => {
+    const video = videoRef.current;
+    const audio = audioRef.current;
+
+    if (!video || !audio) return;
+
+    const handlePlay = () => {
+      if (!audio.src) return;
+
+      audio.currentTime = video.currentTime;
+
+      audio.play().catch((error) => {
+        console.error('Error syncing audio playback:', error);
+      });
+    };
+
+    const handlePause = () => {
+      audio.pause();
+    };
+
+    const handleSeeking = () => {
+      if (!audio.src) return;
+
+      audio.currentTime = video.currentTime;
+    };
+
+    video.addEventListener('play', handlePlay);
+    video.addEventListener('pause', handlePause);
+    video.addEventListener('seeking', handleSeeking);
+
+    return () => {
+      video.removeEventListener('play', handlePlay);
+      video.removeEventListener('pause', handlePause);
+      video.removeEventListener('seeking', handleSeeking);
+    };
+  }, []);
+
+  // Monitors video changes to sync audio.
+  useEffect(() => {
+    const video = videoRef.current;
+    const audio = audioRef.current;
+    if (!video || !audio) return;
+
+    const handleSync = () => {
+      if (selectedAudioTrackIndex === 'default') return;
+      const drift = Math.abs(audio.currentTime - video.currentTime);
+      if (drift > 0.3) {
+        audio.currentTime = video.currentTime;
+      }
+    };
+
+    video.addEventListener('timeupdate', handleSync);
+    return () => video.removeEventListener('timeupdate', handleSync);
+  }, [selectedAudioTrackIndex]);
 
   const handleSubtitleChange = (trackIndex: string) => {
     setSelectedSubtitleTrackIndex(trackIndex);
@@ -218,6 +371,12 @@ export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalP
       className="fixed z-50 inset-0 w-full h-full bg-black flex items-center justify-center overflow-hidden py-24"
     >
       <div className="w-full h-full flex items-center justify-center">
+        {isAudioTrackLoading && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20">
+            <LoaderCircle size={82} className="animate-spin" />
+          </div>
+        )}
+
         <video
           ref={videoRef}
           src={mediaItem.video_url}
@@ -243,6 +402,13 @@ export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalP
             />
           ))}
         </video>
+
+        <audio
+          ref={audioRef}
+          preload="auto"
+          onLoadedMetadata={handleAudioLoadedMetadata}
+          className="absolute inset-0 z-50"
+        />
 
         {/* Custom subtitle overlay */}
         {activeSubtitleText && (
@@ -318,6 +484,25 @@ export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalP
             <span className="text-lg font-semibold text-zinc-200 truncate">{mediaItem.title}</span>
 
             <div className="text-zinc-400 flex items-center gap-3">
+              {/* Audio selector */}
+              <div className="flex flex-row-reverse items-center gap-1">
+                <select
+                  value={selectedAudioTrackIndex}
+                  onChange={(e) => handleAudioChange(e.target.value)}
+                  className="peer bg-transparent hover:text-white text-xs outline-none cursor-pointer"
+                >
+                  <option value="default" className="text-black">
+                    Default
+                  </option>
+                  {mediaItem.audios.map((audio) => (
+                    <option key={audio.id} value={audio.id} className="text-black">
+                      {audio.label}
+                    </option>
+                  ))}
+                </select>
+                <Disc className="size-8 peer-hover:text-white" />
+              </div>
+
               {/* Subtitle selector */}
               <div className="flex flex-row-reverse items-center gap-1">
                 <select
