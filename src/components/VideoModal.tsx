@@ -88,7 +88,7 @@ export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalP
   // Track metadata / Track detection and switching //
   //================================================//
 
-  const handleLoadedMetadata = () => {
+  const handleVideoLoadedMetadata = () => {
     if (!videoRef.current) return;
 
     setDuration(videoRef.current.duration);
@@ -382,7 +382,7 @@ export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalP
           src={mediaItem.video_url}
           crossOrigin="anonymous"
           autoPlay
-          onLoadedMetadata={handleLoadedMetadata}
+          onLoadedMetadata={handleVideoLoadedMetadata}
           onTimeUpdate={handleTimeUpdate}
           onPause={() => {
             if (videoRef.current) {
@@ -396,7 +396,7 @@ export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalP
             <track
               key={subtitle.id}
               kind="subtitles"
-              src={`http://localhost:3000/api/v1/media_items/${mediaItem.id}/subtitles/${subtitle.id}`}
+              src={`http://localhost:3000/api/v1/media_items/${mediaItem.id}/subtitle/${subtitle.id}`}
               srcLang={subtitle.language}
               label={subtitle.label}
             />
