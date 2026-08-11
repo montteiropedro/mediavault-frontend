@@ -15,6 +15,11 @@ export interface IMediaItem {
     language: string;
     label: string;
   }[];
+  subtitles: {
+    id: number;
+    language: string;
+    label: string;
+  }[];
 }
 
 export const api = axios.create({
