@@ -10,6 +10,16 @@ export interface IMediaItem {
   cover_art_url: string | null;
   video_url?: string | null;
   user_progress_seconds?: number;
+  audios: {
+    id: number;
+    language: string;
+    label: string;
+  }[];
+  subtitles: {
+    id: number;
+    language: string;
+    label: string;
+  }[];
 }
 
 export const api = axios.create({
