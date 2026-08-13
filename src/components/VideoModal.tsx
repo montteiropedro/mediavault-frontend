@@ -13,6 +13,7 @@ import {
   LoaderCircle,
 } from 'lucide-react';
 import { mediaItemsService, type IMediaItem } from '../services/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 interface VideoModalProps {
   mediaItem: IMediaItem | null;
@@ -159,7 +160,7 @@ export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalP
     setIsAudioTrackLoading(true);
 
     try {
-      audio.src = `http://localhost:3000/api/v1/media_items/${mediaItem.id}/stream_audio/${trackIndex}`;
+      audio.src = `${API_BASE_URL}/api/v1/media_items/${mediaItem.id}/stream_audio/${trackIndex}`;
       audio.muted = false;
       audio.volume = 1;
 
@@ -396,7 +397,7 @@ export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalP
             <track
               key={subtitle.id}
               kind="subtitles"
-              src={`http://localhost:3000/api/v1/media_items/${mediaItem.id}/subtitle/${subtitle.id}`}
+              src={`${API_BASE_URL}/api/v1/media_items/${mediaItem.id}/subtitle/${subtitle.id}`}
               srcLang={subtitle.language}
               label={subtitle.label}
             />
