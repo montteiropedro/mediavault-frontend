@@ -13,6 +13,7 @@ import {
   LoaderCircle,
 } from 'lucide-react';
 import { mediaItemsService, type IMediaItem } from '../services/api';
+import { useFullscreenLandscapeVideo } from '../hooks/useFullscreenLandscapeVideo';
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 interface VideoModalProps {
@@ -363,6 +364,8 @@ export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalP
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  const { isMobile, enterFullscreenLandscape } = useFullscreenLandscapeVideo(videoContainerRef, handleClose);
+
   if (!mediaItem) return null;
 
   return (
@@ -385,6 +388,7 @@ export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalP
           autoPlay
           onLoadedMetadata={handleVideoLoadedMetadata}
           onTimeUpdate={handleTimeUpdate}
+          onPlay={enterFullscreenLandscape}
           onPause={() => {
             if (videoRef.current) {
               const time = Math.floor(videoRef.current.currentTime);
