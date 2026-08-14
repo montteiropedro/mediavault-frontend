@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { mediaItemsService, type IMediaItem } from '../services/api';
 import { useFullscreenLandscapeVideo } from '../hooks/useFullscreenLandscapeVideo';
+import { useControlsVisibility } from '../hooks/useControlsVisibility';
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 interface VideoModalProps {
@@ -365,19 +366,32 @@ export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalP
   }, []);
 
   const { isMobile, enterFullscreenLandscape } = useFullscreenLandscapeVideo(videoContainerRef, handleClose);
+  const { controlsVisible, showControls, hideControls, onControlsMouseEnter, onControlsMouseLeave } =
+    useControlsVisibility(videoRef);
+
+  const handleVideoAreaInteraction = () => {
+    if (isMobile && !controlsVisible) {
+      showControls();
+    } else if (isMobile && controlsVisible) {
+      hideControls();
+    } else if (!isMobile) {
+      togglePlay();
+    }
+  };
 
   if (!mediaItem) return null;
 
   return (
     <div
       ref={videoContainerRef}
-      onClick={togglePlay}
-      className="fixed z-50 inset-0 w-full h-full bg-black flex items-center justify-center overflow-hidden py-24"
+      onClick={handleVideoAreaInteraction}
+      onMouseMove={showControls}
+      className="fixed z-50 inset-0 w-full h-full bg-black flex items-center justify-center overflow-hidden"
     >
       <div className="w-full h-full flex items-center justify-center">
         {isAudioTrackLoading && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20">
-            <LoaderCircle size={82} className="animate-spin" />
+            <LoaderCircle size={isMobile ? 48 : 82} className="animate-spin" />
           </div>
         )}
 
@@ -418,7 +432,7 @@ export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalP
         {/* Custom subtitle overlay */}
         {activeSubtitleText && (
           <div
-            className={`absolute z-10 left-1/2 -translate-x-1/2 max-w-[85%] text-center pointer-events-none transition-all duration-200 bottom-34`}
+            className={`absolute z-10 left-1/2 -translate-x-1/2 max-w-[85%] text-center pointer-events-none transition-all duration-200 ${isMobile ? (controlsVisible ? 'bottom-20' : 'bottom-6') : 'bottom-28'}`}
           >
             <span className="inline-block text-white font-bold text-base md:text-lg lg:text-4xl px-3 py-1.5 rounded-md text-outline leading-snug whitespace-pre-line">
               {activeSubtitleText}
@@ -428,25 +442,45 @@ export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalP
       </div>
 
       {/* Control overlay */}
-      <div className="absolute inset-0 z-50 bg-linear-to-t from-black/80 via-transparent to-black/30 flex flex-col justify-between p-4">
+      <div
+        className={`absolute inset-0 z-50 flex flex-col justify-between p-4 ${controlsVisible ? 'visible' : 'hidden'}`}
+      >
         {/* Top bar controls */}
-        <div
-          onClick={(e) => {
-            e.stopPropagation();
-            handleClose();
-          }}
-          className="flex flex-row-reverse"
-        >
+        <div className="flex flex-row-reverse">
           <button
-            onClick={onClose}
-            className="p-2 text-zinc-400 hover:text-white flex items-center justify-center rounded-full cursor-pointer"
+            onClick={handleClose}
+            onMouseEnter={onControlsMouseEnter}
+            onMouseLeave={onControlsMouseLeave}
+            className="p-2 hover:text-zinc-400 flex items-center justify-center rounded-full cursor-pointer"
           >
             <X className="size-8" />
           </button>
         </div>
 
+        {/* Central controls */}
+        {isMobile && !isAudioTrackLoading && (
+          <div onClick={(e) => e.stopPropagation()} className="flex items-center justify-center gap-16 py-2">
+            <button onClick={() => skipTime(-10)} className="hover:text-zinc-400 cursor-pointer px-6">
+              <RotateCcw className="size-10" />
+            </button>
+
+            <button onClick={togglePlay} className="hover:text-zinc-400 cursor-pointer px-6">
+              {isPlaying ? <Pause className="size-12" /> : <Play className="size-12" />}
+            </button>
+
+            <button onClick={() => skipTime(10)} className="hover:text-zinc-400 cursor-pointer px-6">
+              <RotateCw className="size-10" />
+            </button>
+          </div>
+        )}
+
         {/* Bottom bar controls */}
-        <div onClick={(e) => e.stopPropagation()} className="flex flex-col gap-2">
+        <div
+          onClick={(e) => e.stopPropagation()}
+          onMouseEnter={onControlsMouseEnter}
+          onMouseLeave={onControlsMouseLeave}
+          className="flex flex-col gap-2"
+        >
           {/* Seekbar/Remaining duration */}
           <div className="flex items-center gap-4">
             <input
@@ -461,40 +495,44 @@ export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalP
                 }
                 setCurrentTime(time);
               }}
-              className="w-full accent-white h-1.5 bg-zinc-700/60 rounded-lg cursor-pointer"
+              className={`w-full accent-white rounded-lg cursor-pointer ${isMobile ? 'h-1' : 'h-1.5'}`}
             />
 
             <span className="text-sm">{formatRemainingTime(currentTime, duration)}</span>
           </div>
 
-          <div className="flex items-center justify-between text-xs text-zinc-400 py-4">
-            <div className="flex items-center gap-4">
-              <button onClick={togglePlay} className="hover:text-white cursor-pointer">
-                {isPlaying ? <Pause className="size-8" /> : <Play className="size-8" />}
-              </button>
+          <div className={`flex items-center text-xs ${isMobile ? 'py-2 justify-center' : 'py-4 justify-between'}`}>
+            {!isMobile && (
+              <>
+                <div className="flex items-center gap-4">
+                  <button onClick={togglePlay} className="hover:text-zinc-400 cursor-pointer">
+                    {isPlaying ? <Pause className="size-8" /> : <Play className="size-8" />}
+                  </button>
 
-              <button onClick={() => skipTime(-10)} className="hover:text-white cursor-pointer">
-                <RotateCcw className="size-8" />
-              </button>
+                  <button onClick={() => skipTime(-10)} className="hover:text-zinc-400 cursor-pointer">
+                    <RotateCcw className="size-8" />
+                  </button>
 
-              <button onClick={() => skipTime(10)} className="hover:text-white cursor-pointer">
-                <RotateCw className="size-8" />
-              </button>
+                  <button onClick={() => skipTime(10)} className="hover:text-zinc-400 cursor-pointer">
+                    <RotateCw className="size-8" />
+                  </button>
 
-              <button onClick={toggleMute} className="hover:text-white cursor-pointer">
-                {isMuted ? <VolumeX className="size-8 text-red-200" /> : <Volume2 className="size-8" />}
-              </button>
-            </div>
+                  <button onClick={toggleMute} className="hover:text-zinc-400 cursor-pointer">
+                    {isMuted ? <VolumeX className="size-8 text-red-200" /> : <Volume2 className="size-8" />}
+                  </button>
+                </div>
 
-            <span className="text-lg font-semibold text-zinc-200 truncate">{mediaItem.title}</span>
+                <span className="text-lg font-semibold truncate">{mediaItem.title}</span>
+              </>
+            )}
 
-            <div className="text-zinc-400 flex items-center gap-3">
+            <div className={`flex items-center ${isMobile ? 'gap-12' : 'gap-3'}`}>
               {/* Audio selector */}
               <div className="flex flex-row-reverse items-center gap-1">
                 <select
                   value={selectedAudioTrackIndex}
                   onChange={(e) => handleAudioChange(e.target.value)}
-                  className="peer bg-transparent hover:text-white text-xs outline-none cursor-pointer"
+                  className="peer bg-transparent hover:text-zinc-400 text-xs outline-none cursor-pointer"
                 >
                   <option value="default" className="text-black">
                     Default
@@ -505,7 +543,7 @@ export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalP
                     </option>
                   ))}
                 </select>
-                <Disc className="size-8 peer-hover:text-white" />
+                <Disc className={`peer-hover:text-zinc-400 ${isMobile ? 'size-5' : 'size-8'}`} />
               </div>
 
               {/* Subtitle selector */}
@@ -513,7 +551,7 @@ export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalP
                 <select
                   value={selectedSubtitleTrackIndex}
                   onChange={(e) => handleSubtitleChange(e.target.value)}
-                  className="peer bg-transparent text-xs hover:text-white outline-none cursor-pointer"
+                  className="peer bg-transparent text-xs hover:text-zinc-400 outline-none cursor-pointer"
                 >
                   <option value="off" className="text-black">
                     Desativada
@@ -524,13 +562,15 @@ export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalP
                     </option>
                   ))}
                 </select>
-                <Captions className="size-8 peer-hover:text-white" />
+                <Captions className={`peer-hover:text-zinc-400 ${isMobile ? 'size-5' : 'size-8'}`} />
               </div>
 
               {/* Fullscreen */}
-              <button onClick={toggleFullscreen} className="hover:text-white cursor-pointer">
-                <Maximize className="size-8" />
-              </button>
+              {!isMobile && (
+                <button onClick={toggleFullscreen} className="hover:text-zinc-400 cursor-pointer">
+                  <Maximize className="size-8" />
+                </button>
+              )}
             </div>
           </div>
         </div>
