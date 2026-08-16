@@ -9,6 +9,7 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react(), tailwindcss()],
     server: {
+      allowedHosts: ['.local'],
       host: '0.0.0.0',
       port: Number(env.PORT) || 5173,
       watch: {
