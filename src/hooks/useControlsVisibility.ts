@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
+import { useIsMobile } from './useIsMobile';
 
 interface UseControlsVisibilityOptionsProps {
   timeout?: number;
@@ -9,9 +10,12 @@ export function useControlsVisibility(
   { timeout = 3000 }: UseControlsVisibilityOptionsProps = {}
 ) {
   const [controlsVisible, setControlsVisible] = useState<boolean>(true);
+
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isHoveringControlsRef = useRef<boolean>(false);
   const isPlayingRef = useRef<boolean>(false);
+
+  const isMobile = useIsMobile();
 
   const clearHideTimer = () => {
     if (timerRef.current) clearTimeout(timerRef.current);
@@ -22,9 +26,9 @@ export function useControlsVisibility(
     if (!isPlayingRef.current) return;
 
     timerRef.current = setTimeout(() => {
-      if (!isHoveringControlsRef.current) setControlsVisible(false);
+      if (!isHoveringControlsRef.current || isMobile) setControlsVisible(false);
     }, timeout);
-  }, [timeout]);
+  }, [timeout, isMobile]);
 
   const showControls = useCallback(() => {
     setControlsVisible(true);
