@@ -1,20 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import {
-  X,
-  Play,
-  Pause,
-  RotateCcw,
-  RotateCw,
-  Volume2,
-  VolumeX,
-  Maximize,
-  Captions,
-  Disc,
-  LoaderCircle,
-} from 'lucide-react';
+import { X, Play, Pause, RotateCcw, RotateCw, Volume2, VolumeX, Maximize, LoaderCircle } from 'lucide-react';
 import { mediaItemsService, type IMediaItem } from '../services/api';
 import { useFullscreenLandscapeVideo } from '../hooks/useFullscreenLandscapeVideo';
 import { useControlsVisibility } from '../hooks/useControlsVisibility';
+import { TrackOptions } from './Tracks/TrackOptions';
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 interface VideoModalProps {
@@ -34,12 +23,12 @@ export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalP
   const [currentTime, setCurrentTime] = useState(0);
 
   // Audio track states
-  const [selectedAudioTrackIndex, setSelectedAudioTrackIndex] = useState<string>('default');
+  const [selectedAudioTrackIndex, setSelectedAudioTrackIndex] = useState<number | null>(null);
   const [isAudioTrackLoading, setIsAudioTrackLoading] = useState<boolean>(false);
 
   // Subtitle track states
   const [activeSubtitleText, setActiveSubtitleText] = useState<string>('');
-  const [selectedSubtitleTrackIndex, setSelectedSubtitleTrackIndex] = useState<string>('off');
+  const [selectedSubtitleTrackIndex, setSelectedSubtitleTrackIndex] = useState<number | null>(null);
 
   const initialTime = mediaItem?.user_progress_seconds || 0;
   const currentProgressRef = useRef<number>(initialTime);
@@ -132,7 +121,7 @@ export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalP
     });
   };
 
-  const handleAudioChange = async (trackIndex: string) => {
+  const handleAudioChange = async (trackIndex: number | null) => {
     const video = videoRef.current;
     const audio = audioRef.current;
 
@@ -143,7 +132,7 @@ export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalP
     const videoWasPlaying = !video.paused;
     video.pause();
 
-    if (trackIndex === 'default') {
+    if (trackIndex === null) {
       audio.pause();
       audio.removeAttribute('src');
       audio.load();
@@ -177,7 +166,7 @@ export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalP
       }
     } catch (error) {
       console.error('Error loading selected audio track:', error);
-      setSelectedAudioTrackIndex('default');
+      setSelectedAudioTrackIndex(null);
       video.muted = false;
     } finally {
       setIsAudioTrackLoading(false);
@@ -229,7 +218,7 @@ export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalP
     if (!video || !audio) return;
 
     const handleSync = () => {
-      if (selectedAudioTrackIndex === 'default') return;
+      if (selectedAudioTrackIndex === null) return;
       const drift = Math.abs(audio.currentTime - video.currentTime);
       if (drift > 0.3) {
         audio.currentTime = video.currentTime;
@@ -240,7 +229,7 @@ export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalP
     return () => video.removeEventListener('timeupdate', handleSync);
   }, [selectedAudioTrackIndex]);
 
-  const handleSubtitleChange = (trackIndex: string) => {
+  const handleSubtitleChange = (trackIndex: number | null) => {
     setSelectedSubtitleTrackIndex(trackIndex);
     setActiveSubtitleText('');
 
@@ -249,7 +238,7 @@ export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalP
     const tracks = Array.from(videoRef.current.textTracks);
 
     tracks.forEach((track, index) => {
-      if (trackIndex !== 'off' && index === Number(trackIndex)) {
+      if (trackIndex !== null && index === trackIndex) {
         track.mode = 'hidden';
       } else {
         track.mode = 'disabled';
@@ -527,43 +516,16 @@ export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalP
             )}
 
             <div className={`flex items-center ${isMobile ? 'gap-12' : 'gap-3'}`}>
-              {/* Audio selector */}
-              <div className="flex flex-row-reverse items-center gap-1">
-                <select
-                  value={selectedAudioTrackIndex}
-                  onChange={(e) => handleAudioChange(e.target.value)}
-                  className="peer bg-transparent hover:text-zinc-400 text-xs outline-none cursor-pointer"
-                >
-                  <option value="default" className="text-black">
-                    Default
-                  </option>
-                  {mediaItem.audios.map((audio) => (
-                    <option key={audio.id} value={audio.id} className="text-black">
-                      {audio.label}
-                    </option>
-                  ))}
-                </select>
-                <Disc className={`peer-hover:text-zinc-400 ${isMobile ? 'size-5' : 'size-8'}`} />
-              </div>
-
-              {/* Subtitle selector */}
-              <div className="flex flex-row-reverse items-center gap-1">
-                <select
-                  value={selectedSubtitleTrackIndex}
-                  onChange={(e) => handleSubtitleChange(e.target.value)}
-                  className="peer bg-transparent text-xs hover:text-zinc-400 outline-none cursor-pointer"
-                >
-                  <option value="off" className="text-black">
-                    Desativada
-                  </option>
-                  {mediaItem.subtitles.map((subtitle) => (
-                    <option key={subtitle.id} value={subtitle.id} className="text-black">
-                      {subtitle.label}
-                    </option>
-                  ))}
-                </select>
-                <Captions className={`peer-hover:text-zinc-400 ${isMobile ? 'size-5' : 'size-8'}`} />
-              </div>
+              {/* Audio and subtitle selector */}
+              <TrackOptions
+                mediaItem={mediaItem}
+                isMobile={isMobile}
+                videoRef={videoRef}
+                selectedAudioTrackIndex={selectedAudioTrackIndex}
+                selectedSubtitleTrackIndex={selectedSubtitleTrackIndex}
+                handleAudioChange={handleAudioChange}
+                handleSubtitleChange={handleSubtitleChange}
+              />
 
               {/* Fullscreen */}
               {!isMobile && (
