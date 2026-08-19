@@ -98,7 +98,7 @@ export function TrackOptions({
 
       {!isMobile && (
         <div className="group-hover:flex hidden absolute bottom-full -right-4 pb-4">
-          <div className="flex gap-2 bg-[#262626] p-2 rounded">
+          <div className="flex gap-2 bg-secondary p-2 rounded">
             <TrackList
               isMobile={isMobile}
               title="Áudio"
