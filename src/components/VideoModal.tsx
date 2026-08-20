@@ -3,11 +3,13 @@ import { X, Play, Pause, RotateCcw, RotateCw, Volume2, VolumeX, Maximize, Loader
 import { mediaItemsService, type IMediaItem } from '../services/api';
 import { useFullscreenLandscapeVideo } from '../hooks/useFullscreenLandscapeVideo';
 import { useControlsVisibility } from '../hooks/useControlsVisibility';
+import { useHlsPlayer } from '../hooks/useHlsPlayer';
 import { TrackOptions } from './Tracks/TrackOptions';
+
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 interface VideoModalProps {
-  mediaItem: IMediaItem | null;
+  mediaItem: IMediaItem;
   onClose: () => void;
   onProgressUpdate: (mediaItemId: number, seconds: number) => void;
 }
@@ -33,6 +35,40 @@ export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalP
   const initialTime = mediaItem?.user_progress_seconds || 0;
   const currentProgressRef = useRef<number>(initialTime);
   const lastSavedTimeRef = useRef<number>(initialTime);
+
+  //===========//
+  // HLS setup //
+  //===========//
+
+  const { isVideoLoading, setIsVideoLoading } = useHlsPlayer({
+    src: mediaItem?.video_url,
+    videoRef,
+  });
+
+  //================//
+  // Track metadata //
+  //================//
+
+  const handleVideoLoadedMetadata = () => {
+    if (!videoRef.current) return;
+
+    setDuration(videoRef.current.duration);
+    setIsVideoLoading(false);
+
+    const isCompleted = mediaItem?.duration && initialTime / mediaItem.duration >= 0.95;
+
+    if (initialTime > 0 && !isCompleted) {
+      videoRef.current.currentTime = initialTime;
+    }
+  };
+
+  const handleAudioLoadedMetadata = () => {
+    const video = videoRef.current;
+    const audio = audioRef.current;
+    if (!video || !audio) return;
+
+    audio.currentTime = video.currentTime;
+  };
 
   //====================================================================//
   // Navigation and control functions (+/- 10s, play/pause, fullscreen) //
@@ -76,31 +112,9 @@ export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalP
     }
   };
 
-  //================================================//
-  // Track metadata / Track detection and switching //
-  //================================================//
-
-  const handleVideoLoadedMetadata = () => {
-    if (!videoRef.current) return;
-
-    setDuration(videoRef.current.duration);
-
-    // Restores user progress
-    const isCompleted = mediaItem?.duration && initialTime / mediaItem.duration >= 0.95;
-
-    if (initialTime > 0 && !isCompleted) {
-      videoRef.current.currentTime = initialTime;
-    }
-  };
-
-  const handleAudioLoadedMetadata = () => {
-    const video = videoRef.current;
-    const audio = audioRef.current;
-
-    if (!video || !audio) return;
-
-    audio.currentTime = video.currentTime;
-  };
+  //===============================//
+  // Track detection and switching //
+  //===============================//
 
   const waitForCanPlay = (media: HTMLMediaElement): Promise<void> => {
     return new Promise((resolve, reject) => {
@@ -378,7 +392,7 @@ export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalP
       className="fixed z-50 inset-0 w-full h-full bg-black flex items-center justify-center overflow-hidden"
     >
       <div className="w-full h-full flex items-center justify-center">
-        {isAudioTrackLoading && (
+        {(isAudioTrackLoading || isVideoLoading) && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20">
             <LoaderCircle size={isMobile ? 48 : 82} className="animate-spin" />
           </div>
@@ -386,7 +400,6 @@ export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalP
 
         <video
           ref={videoRef}
-          src={mediaItem.video_url}
           crossOrigin="anonymous"
           autoPlay
           onLoadedMetadata={handleVideoLoadedMetadata}
