@@ -8,7 +8,7 @@ export interface IMediaItem {
   year?: number;
   file_path: string;
   cover_art_url: string | null;
-  video_url?: string | null;
+  video_url: string;
   user_progress_seconds?: number;
   audios: {
     id: number;
