@@ -11,6 +11,10 @@
   box-sizing: border-box;
 }
 
+html {
+  background-color: var(--color-primary);
+}
+
 body {
   margin: 0;
 }
@@ -54,4 +58,21 @@ code {
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background-color: #71717a;
+}
+
+@theme {
+  --container-app: 2560px;
+
+  --color-primary: #09090b;
+  --color-secondary: #262626;
+}
+
+@layer utilities {
+  .text-outline {
+    text-shadow:
+      1px 1px 0 black,
+      -1px -1px 0 black,
+      1px -1px 0 black,
+      -1px 1px 0 black;
+  }
 }

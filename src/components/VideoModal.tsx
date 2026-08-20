@@ -421,9 +421,9 @@ export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalP
         {/* Custom subtitle overlay */}
         {activeSubtitleText && (
           <div
-            className={`absolute z-10 left-1/2 -translate-x-1/2 max-w-[85%] text-center pointer-events-none transition-all duration-200 ${isMobile ? (controlsVisible ? 'bottom-20' : 'bottom-6') : 'bottom-28'}`}
+            className={`absolute z-10 left-1/2 -translate-x-1/2 max-w-[85%] text-center pointer-events-none transition-all duration-200 ${isMobile ? (controlsVisible ? 'bottom-20' : 'bottom-6') : controlsVisible ? 'bottom-28' : 'bottom-14'}`}
           >
-            <span className="inline-block text-white font-bold text-base md:text-lg lg:text-4xl px-3 py-1.5 rounded-md text-outline leading-snug whitespace-pre-line">
+            <span className="inline-block text-white text-outline font-bold text-base md:text-lg lg:text-4xl px-3 py-1.5 rounded-md whitespace-pre-line">
               {activeSubtitleText}
             </span>
           </div>
@@ -431,11 +431,9 @@ export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalP
       </div>
 
       {/* Control overlay */}
-      <div
-        className={`absolute inset-0 z-50 flex flex-col justify-between p-4 ${controlsVisible ? 'visible' : 'hidden'}`}
-      >
+      <div className={`absolute inset-0 z-50 flex flex-col justify-between ${controlsVisible ? 'visible' : 'hidden'}`}>
         {/* Top bar controls */}
-        <div className="flex flex-row-reverse">
+        <div className="flex flex-row-reverse p-4">
           <button
             onClick={handleClose}
             onMouseEnter={onControlsMouseEnter}
@@ -448,16 +446,34 @@ export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalP
 
         {/* Central controls */}
         {isMobile && !isAudioTrackLoading && (
-          <div onClick={(e) => e.stopPropagation()} className="flex items-center justify-center gap-16 py-2">
-            <button onClick={() => skipTime(-10)} className="hover:text-zinc-400 cursor-pointer px-6">
+          <div className="flex items-center justify-center gap-16 py-2 px-4">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                skipTime(-10);
+              }}
+              className="hover:text-zinc-400 cursor-pointer px-6"
+            >
               <RotateCcw className="size-10" />
             </button>
 
-            <button onClick={togglePlay} className="hover:text-zinc-400 cursor-pointer px-6">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                togglePlay();
+              }}
+              className="hover:text-zinc-400 cursor-pointer px-6"
+            >
               {isPlaying ? <Pause className="size-12" /> : <Play className="size-12" />}
             </button>
 
-            <button onClick={() => skipTime(10)} className="hover:text-zinc-400 cursor-pointer px-6">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                skipTime(10);
+              }}
+              className="hover:text-zinc-400 cursor-pointer px-6"
+            >
               <RotateCw className="size-10" />
             </button>
           </div>
@@ -468,10 +484,10 @@ export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalP
           onClick={(e) => e.stopPropagation()}
           onMouseEnter={onControlsMouseEnter}
           onMouseLeave={onControlsMouseLeave}
-          className="flex flex-col gap-2"
+          className="relative flex flex-col p-4"
         >
           {/* Seekbar/Remaining duration */}
-          <div className="flex items-center gap-4">
+          <div className="z-50 flex items-center gap-4">
             <input
               type="range"
               min={0}
@@ -490,7 +506,9 @@ export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalP
             <span className="text-sm">{formatRemainingTime(currentTime, duration)}</span>
           </div>
 
-          <div className={`flex items-center text-xs ${isMobile ? 'py-2 justify-center' : 'py-4 justify-between'}`}>
+          <div
+            className={`z-50 flex items-center text-xs ${isMobile ? 'py-2 justify-center' : 'py-4 justify-between'}`}
+          >
             {!isMobile && (
               <>
                 <div className="flex items-center gap-4">
@@ -535,6 +553,8 @@ export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalP
               )}
             </div>
           </div>
+
+          <div className="absolute inset-x-0 bottom-0 h-26 w-full bg-linear-to-t from-black via-black/60 to-transparent" />
         </div>
       </div>
     </div>

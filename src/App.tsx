@@ -74,16 +74,16 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans antialiased">
+    <div className="min-h-screen max-w-app bg-zinc-950 text-zinc-100 font-sans antialiased m-auto">
       <Header
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
         isScanning={isScanning}
-        onLibraryScan={handleLibraryScan}
+        handleLibraryScan={handleLibraryScan}
       />
 
       {/* Main */}
-      <main className="max-w-7xl mx-auto px-6 py-8 flex flex-col gap-10">
+      <main className="flex flex-col gap-10 py-8 px-4 sm:px-16">
         {/* Section: Keep watching */}
         {!loading && !searchTerm && continueWatchingItems.length > 0 && (
           <section className="flex flex-col gap-4">
@@ -95,7 +95,7 @@ export function App() {
             </div>
 
             {/* Keep watching grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-y-6 gap-x-2 lg:gap-x-4">
               {continueWatchingItems.map((item) => (
                 <MediaCard
                   key={`continue-${item.id}`}
@@ -133,7 +133,7 @@ export function App() {
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-y-6 gap-x-2 lg:gap-x-4">
               {filteredMediaItems.map((item) => (
                 <MediaCard key={item.id} mediaItem={item} onSelect={(selected) => setSelectedMedia(selected)} />
               ))}
