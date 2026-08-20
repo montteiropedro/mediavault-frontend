@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { X, Play, Pause, RotateCcw, RotateCw, Volume2, VolumeX, Maximize, LoaderCircle } from 'lucide-react';
-import { mediaItemsService, type IMediaItem } from '../services/api';
+import { mediaItemsService, type MediaItemProps } from '../services/api';
 import { useFullscreenLandscapeVideo } from '../hooks/useFullscreenLandscapeVideo';
 import { useControlsVisibility } from '../hooks/useControlsVisibility';
 import { useHlsPlayer } from '../hooks/useHlsPlayer';
@@ -11,7 +11,7 @@ import { TrackOptions } from './Tracks/TrackOptions';
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 interface VideoModalProps {
-  mediaItem: IMediaItem;
+  mediaItem: MediaItemProps;
   onClose: () => void;
   onProgressUpdate: (mediaItemId: number, seconds: number) => void;
 }

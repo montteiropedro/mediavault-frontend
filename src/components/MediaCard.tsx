@@ -1,10 +1,10 @@
 import { useRef } from 'react';
 import { ImageOff } from 'lucide-react';
-import type { IMediaItem } from '../services/api';
+import type { MediaItemProps } from '../services/api';
 
 interface MediaCardProps {
-  mediaItem: IMediaItem;
-  onSelect: (mediaItem: IMediaItem) => void;
+  mediaItem: MediaItemProps;
+  onSelect: (mediaItem: MediaItemProps) => void;
 }
 
 export function MediaCard({ mediaItem, onSelect }: MediaCardProps) {
