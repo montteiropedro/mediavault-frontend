@@ -1,9 +1,9 @@
 import { useState, useEffect, useMemo } from 'react';
-import type { IMediaItem } from '../../services/api';
+import type { MediaItemProps } from '../../services/api';
 
 interface useSubtitleTrackProps {
   videoRef: React.RefObject<HTMLVideoElement | null>;
-  mediaItem: IMediaItem;
+  mediaItem: MediaItemProps;
   baseUrl: string;
 }
 

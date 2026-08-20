@@ -1,15 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
-import { mediaItemsService, type IMediaItem } from './services/api';
+import { mediaItemsService, type MediaItemProps } from './services/api';
 import { VideoModal } from './components/VideoModal';
 import { MediaCard } from './components/MediaCard';
 import { Header } from './components/Header';
 
 export function App() {
-  const [mediaItems, setMediaItems] = useState<IMediaItem[]>([]);
+  const [mediaItems, setMediaItems] = useState<MediaItemProps[]>([]);
   const [loading, setLoading] = useState(true);
   const [isScanning, setIsScanning] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedMedia, setSelectedMedia] = useState<IMediaItem | null>(null);
+  const [selectedMedia, setSelectedMedia] = useState<MediaItemProps | null>(null);
 
   const continueWatchingItems = useMemo(() => {
     return mediaItems.filter((item) => {

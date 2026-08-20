@@ -1,10 +1,10 @@
 import { Captions } from 'lucide-react';
 import { TrackList } from './TrackList';
 import { useRef, useState } from 'react';
-import type { IMediaItem } from '../../services/api';
+import type { MediaItemProps } from '../../services/api';
 
 interface TrackOptionsProps {
-  mediaItem: IMediaItem;
+  mediaItem: MediaItemProps;
   isMobile: boolean;
   videoRef: React.RefObject<HTMLVideoElement | null>;
   selectedAudioTrackIndex: number | null;

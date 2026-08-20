@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-export interface IMediaItem {
+export interface MediaItemProps {
   id: number;
   title: string;
   duration: number;
@@ -31,8 +31,8 @@ export const api = axios.create({
 
 // Utils
 export const mediaItemsService = {
-  getAll: async (): Promise<IMediaItem[]> => {
-    const response = await api.get<IMediaItem[]>('/api/v1/media_items');
+  getAll: async (): Promise<MediaItemProps[]> => {
+    const response = await api.get<MediaItemProps[]>('/api/v1/media_items');
     return response.data;
   },
 
