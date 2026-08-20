@@ -4,6 +4,8 @@ import { mediaItemsService, type IMediaItem } from '../services/api';
 import { useFullscreenLandscapeVideo } from '../hooks/useFullscreenLandscapeVideo';
 import { useControlsVisibility } from '../hooks/useControlsVisibility';
 import { useHlsPlayer } from '../hooks/useHlsPlayer';
+import { useAudioTrack } from '../hooks/Tracks/useAudioTrack';
+import { useSubtitleTrack } from '../hooks/Tracks/useSubtitleTrack';
 import { TrackOptions } from './Tracks/TrackOptions';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
@@ -23,14 +25,6 @@ export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalP
   const [isMuted, setIsMuted] = useState(false);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
-
-  // Audio track states
-  const [selectedAudioTrackIndex, setSelectedAudioTrackIndex] = useState<number | null>(null);
-  const [isAudioTrackLoading, setIsAudioTrackLoading] = useState<boolean>(false);
-
-  // Subtitle track states
-  const [activeSubtitleText, setActiveSubtitleText] = useState<string>('');
-  const [selectedSubtitleTrackIndex, setSelectedSubtitleTrackIndex] = useState<number | null>(null);
 
   const initialTime = mediaItem?.user_progress_seconds || 0;
   const currentProgressRef = useRef<number>(initialTime);
@@ -70,8 +64,61 @@ export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalP
     audio.currentTime = video.currentTime;
   };
 
+  //=========================//
+  // Audio & Subtitle Tracks //
+  //=========================//
+
+  const { selectedAudioTrackIndex, isAudioTrackLoading, handleAudioChange } = useAudioTrack({
+    videoRef,
+    audioRef,
+    mediaItemId: mediaItem.id,
+    baseUrl: API_BASE_URL,
+  });
+
+  const { selectedSubtitleTrackIndex, activeSubtitleText, handleSubtitleChange, subtitleTracks } = useSubtitleTrack({
+    videoRef,
+    mediaItem: mediaItem,
+    baseUrl: API_BASE_URL,
+  });
+
+  //=========================//
+  // Persistence of progress //
+  //=========================//
+
+  const saveProgressToBackend = async (time: number) => {
+    // Prevents repeated calls for the same time
+    if (!mediaItem || Math.abs(time - lastSavedTimeRef.current) < 2) return;
+
+    try {
+      lastSavedTimeRef.current = time;
+      onProgressUpdate(mediaItem.id, time);
+      await mediaItemsService.saveProgress(mediaItem.id, time);
+    } catch (error) {
+      console.error('Error saving progress:', error);
+    }
+  };
+
+  const handleTimeUpdate = () => {
+    if (!videoRef.current) return;
+
+    const time = Math.floor(videoRef.current.currentTime);
+
+    if (time > 0 && time % 5 === 0) {
+      setCurrentTime(time);
+      currentProgressRef.current = time;
+    }
+  };
+
+  const handleClose = () => {
+    if (videoRef.current) {
+      const time = Math.floor(videoRef.current.currentTime);
+      saveProgressToBackend(time);
+    }
+    onClose();
+  };
+
   //====================================================================//
-  // Navigation and control functions (+/- 10s, play/pause, fullscreen) //
+  // Navigation & Control functions (+/- 10s, play/pause, fullscreen)   //
   //====================================================================//
 
   const togglePlay = () => {
@@ -111,229 +158,6 @@ export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalP
       document.exitFullscreen().catch(console.error);
     }
   };
-
-  //===============================//
-  // Track detection and switching //
-  //===============================//
-
-  const waitForCanPlay = (media: HTMLMediaElement): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      const cleanup = () => {
-        media.removeEventListener('canplay', onCanPlay);
-        media.removeEventListener('error', onError);
-      };
-      const onCanPlay = () => {
-        cleanup();
-        resolve();
-      };
-      const onError = () => {
-        cleanup();
-        reject(media.error ?? new Error('Failed to load audio'));
-      };
-      media.addEventListener('canplay', onCanPlay);
-      media.addEventListener('error', onError);
-    });
-  };
-
-  const handleAudioChange = async (trackIndex: number | null) => {
-    const video = videoRef.current;
-    const audio = audioRef.current;
-
-    if (!video || !audio || !mediaItem) return;
-
-    setSelectedAudioTrackIndex(trackIndex);
-
-    const videoWasPlaying = !video.paused;
-    video.pause();
-
-    if (trackIndex === null) {
-      audio.pause();
-      audio.removeAttribute('src');
-      audio.load();
-      video.muted = false;
-
-      if (videoWasPlaying) {
-        await video.play().catch((error) => {
-          console.error('Error resuming video:', error);
-        });
-      }
-      return;
-    }
-
-    const videoCurrentTime = video.currentTime;
-
-    setIsAudioTrackLoading(true);
-
-    try {
-      audio.src = `${API_BASE_URL}/api/v1/media_items/${mediaItem.id}/stream_audio/${trackIndex}`;
-      audio.muted = false;
-      audio.volume = 1;
-
-      await waitForCanPlay(audio);
-
-      audio.currentTime = videoCurrentTime;
-      video.currentTime = videoCurrentTime;
-      video.muted = true;
-
-      if (videoWasPlaying) {
-        await Promise.all([audio.play(), video.play()]);
-      }
-    } catch (error) {
-      console.error('Error loading selected audio track:', error);
-      setSelectedAudioTrackIndex(null);
-      video.muted = false;
-    } finally {
-      setIsAudioTrackLoading(false);
-    }
-  };
-
-  // Monitors video changes to sync audio.
-  useEffect(() => {
-    const video = videoRef.current;
-    const audio = audioRef.current;
-
-    if (!video || !audio) return;
-
-    const handlePlay = () => {
-      if (!audio.src) return;
-
-      audio.currentTime = video.currentTime;
-
-      audio.play().catch((error) => {
-        console.error('Error syncing audio playback:', error);
-      });
-    };
-
-    const handlePause = () => {
-      audio.pause();
-    };
-
-    const handleSeeking = () => {
-      if (!audio.src) return;
-
-      audio.currentTime = video.currentTime;
-    };
-
-    video.addEventListener('play', handlePlay);
-    video.addEventListener('pause', handlePause);
-    video.addEventListener('seeking', handleSeeking);
-
-    return () => {
-      video.removeEventListener('play', handlePlay);
-      video.removeEventListener('pause', handlePause);
-      video.removeEventListener('seeking', handleSeeking);
-    };
-  }, []);
-
-  // Monitors video changes to sync audio.
-  useEffect(() => {
-    const video = videoRef.current;
-    const audio = audioRef.current;
-    if (!video || !audio) return;
-
-    const handleSync = () => {
-      if (selectedAudioTrackIndex === null) return;
-      const drift = Math.abs(audio.currentTime - video.currentTime);
-      if (drift > 0.3) {
-        audio.currentTime = video.currentTime;
-      }
-    };
-
-    video.addEventListener('timeupdate', handleSync);
-    return () => video.removeEventListener('timeupdate', handleSync);
-  }, [selectedAudioTrackIndex]);
-
-  const handleSubtitleChange = (trackIndex: number | null) => {
-    setSelectedSubtitleTrackIndex(trackIndex);
-    setActiveSubtitleText('');
-
-    if (!videoRef.current) return;
-
-    const tracks = Array.from(videoRef.current.textTracks);
-
-    tracks.forEach((track, index) => {
-      if (trackIndex !== null && index === trackIndex) {
-        track.mode = 'hidden';
-      } else {
-        track.mode = 'disabled';
-      }
-    });
-  };
-
-  // Monitors cue changes on the selected track.
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    const handleCueChange = () => {
-      const tracks = video.textTracks;
-      let activeText = '';
-
-      for (const track of tracks) {
-        if (track.mode === 'showing' || track.mode === 'hidden') {
-          const cue = track.activeCues?.[0] as VTTCue | undefined;
-
-          if (cue) {
-            activeText = cue.text;
-            break;
-          }
-        }
-      }
-
-      setActiveSubtitleText(activeText);
-    };
-
-    const tracks = Array.from(video.textTracks);
-    tracks.forEach((track) => {
-      track.oncuechange = handleCueChange;
-    });
-
-    return () => {
-      tracks.forEach((track) => {
-        track.oncuechange = null;
-      });
-    };
-  }, [selectedSubtitleTrackIndex]);
-
-  //=========================//
-  // Persistence of progress //
-  //=========================//
-
-  const saveProgressToBackend = async (time: number) => {
-    // Prevents repeated calls for the same time
-    if (!mediaItem || Math.abs(time - lastSavedTimeRef.current) < 2) return;
-
-    try {
-      lastSavedTimeRef.current = time;
-      onProgressUpdate(mediaItem.id, time);
-      await mediaItemsService.saveProgress(mediaItem.id, time);
-    } catch (error) {
-      console.error('Error saving progress:', error);
-    }
-  };
-
-  const handleTimeUpdate = () => {
-    if (!videoRef.current) return;
-
-    const time = Math.floor(videoRef.current.currentTime);
-
-    if (time > 0 && time % 5 === 0) {
-      setCurrentTime(time);
-      currentProgressRef.current = time;
-    }
-  };
-
-  const handleClose = () => {
-    if (videoRef.current) {
-      const time = Math.floor(videoRef.current.currentTime);
-      saveProgressToBackend(time);
-    }
-    onClose();
-  };
-
-  //===================//
-  // Keyboard keybinds //
-  //===================//
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -413,15 +237,7 @@ export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalP
           }}
           className="w-full h-full object-contain"
         >
-          {mediaItem.subtitles.map((subtitle) => (
-            <track
-              key={subtitle.id}
-              kind="subtitles"
-              src={`${API_BASE_URL}/api/v1/media_items/${mediaItem.id}/subtitle/${subtitle.id}`}
-              srcLang={subtitle.language}
-              label={subtitle.label}
-            />
-          ))}
+          {subtitleTracks}
         </video>
 
         <audio
