@@ -11,7 +11,7 @@ interface TrackListProps {
   }[];
   selectedId: number | null;
   onSelect: (id: number | null) => void;
-  onScroll: (e: React.UIEvent<HTMLUListElement>) => void;
+  onScroll?: (e: React.UIEvent<HTMLUListElement>) => void;
 }
 
 export function TrackList({ isMobile, title, offButton, items, selectedId, onSelect, onScroll }: TrackListProps) {
