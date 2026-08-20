@@ -35,7 +35,7 @@ export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalP
   //===========//
 
   const { isVideoLoading, setIsVideoLoading } = useHlsPlayer({
-    src: mediaItem?.video_url,
+    src: mediaItem.video_url,
     videoRef,
   });
 
