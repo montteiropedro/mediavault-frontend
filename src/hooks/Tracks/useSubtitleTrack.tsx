@@ -1,6 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import type { IMediaItem } from '../../services/api';
 
-export const useSubtitleTrack = (videoRef: React.RefObject<HTMLVideoElement | null>) => {
+interface useSubtitleTrackProps {
+  videoRef: React.RefObject<HTMLVideoElement | null>;
+  mediaItem: IMediaItem;
+  baseUrl: string;
+}
+
+export const useSubtitleTrack = ({ videoRef, mediaItem, baseUrl }: useSubtitleTrackProps) => {
   const [selectedSubtitleTrackIndex, setSelectedSubtitleTrackIndex] = useState<number | null>(null);
   const [activeSubtitleText, setActiveSubtitleText] = useState<string>('');
 
@@ -18,6 +25,18 @@ export const useSubtitleTrack = (videoRef: React.RefObject<HTMLVideoElement | nu
       }
     });
   };
+
+  const subtitleTracks = useMemo(() => {
+    return mediaItem.subtitles.map((subtitle) => (
+      <track
+        key={subtitle.id}
+        kind="subtitles"
+        src={`${baseUrl}/api/v1/media_items/${mediaItem.id}/subtitle/${subtitle.id}`}
+        srcLang={subtitle.language}
+        label={subtitle.label}
+      />
+    ));
+  }, [mediaItem.id, mediaItem.subtitles, baseUrl]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -48,5 +67,10 @@ export const useSubtitleTrack = (videoRef: React.RefObject<HTMLVideoElement | nu
     };
   }, [selectedSubtitleTrackIndex, videoRef]);
 
-  return { selectedSubtitleTrackIndex, activeSubtitleText, handleSubtitleChange };
+  return {
+    selectedSubtitleTrackIndex,
+    activeSubtitleText,
+    handleSubtitleChange,
+    subtitleTracks,
+  };
 };
