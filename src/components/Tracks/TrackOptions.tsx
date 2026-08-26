@@ -1,10 +1,10 @@
+import { useRef, useState } from 'react';
 import { Captions } from 'lucide-react';
 import { TrackList } from './TrackList';
-import { useRef, useState } from 'react';
-import type { MediaItemProps } from '../../services/api';
+import type { IMovie, IEpisode } from '@/types';
 
 interface TrackOptionsProps {
-  mediaItem: MediaItemProps;
+  playable: IMovie | IEpisode;
   isMobile: boolean;
   videoRef: React.RefObject<HTMLVideoElement | null>;
   selectedAudioTrackIndex: number | null;
@@ -14,7 +14,7 @@ interface TrackOptionsProps {
 }
 
 export function TrackOptions({
-  mediaItem,
+  playable,
   isMobile,
   videoRef,
   selectedAudioTrackIndex,
@@ -67,7 +67,7 @@ export function TrackOptions({
             <TrackList
               isMobile={isMobile}
               title="Áudio"
-              items={mediaItem.audios}
+              items={playable.audio_tracks}
               selectedId={selectedAudioTrackIndex}
               onSelect={handleAudioChange}
               onScroll={handleScroll}
@@ -76,7 +76,7 @@ export function TrackOptions({
               isMobile={isMobile}
               title="Legenda"
               offButton={true}
-              items={mediaItem.subtitles}
+              items={playable.subtitle_tracks}
               selectedId={selectedSubtitleTrackIndex}
               onSelect={handleSubtitleChange}
               onScroll={handleScroll}
@@ -102,7 +102,7 @@ export function TrackOptions({
             <TrackList
               isMobile={isMobile}
               title="Áudio"
-              items={mediaItem.audios}
+              items={playable.audio_tracks}
               selectedId={selectedAudioTrackIndex}
               onSelect={handleAudioChange}
             />
@@ -110,7 +110,7 @@ export function TrackOptions({
               isMobile={isMobile}
               title="Legenda"
               offButton={true}
-              items={mediaItem.subtitles}
+              items={playable.subtitle_tracks}
               selectedId={selectedSubtitleTrackIndex}
               onSelect={handleSubtitleChange}
             />

@@ -1,62 +1,37 @@
 import { useRef } from 'react';
+import { useNavigate } from 'react-router';
 import { ImageOff } from 'lucide-react';
-import type { MediaItemProps } from '../services/api';
+import { useCardEffect } from '@/hooks/useCardEffect';
+import type { IEpisode, IMovie } from '@/types';
 
 interface MediaCardProps {
-  mediaItem: MediaItemProps;
-  onSelect: (mediaItem: MediaItemProps) => void;
+  playable: IMovie | IEpisode;
 }
 
-export function MediaCard({ mediaItem, onSelect }: MediaCardProps) {
+export function MediaCard({ playable }: MediaCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
-  const { title, cover_art_url, duration, user_progress_seconds } = mediaItem;
+  const { title, duration_seconds, user_progress_seconds } = playable;
+  const cover_art_url = 'cover_art_url' in playable ? playable.cover_art_url : null;
 
   const progressSeconds = user_progress_seconds || 0;
-  const progressPercent = duration && duration > 0 ? Math.min((progressSeconds / duration) * 100, 100) : 0;
-
+  const progressPercent = duration_seconds > 0 ? Math.min((progressSeconds / duration_seconds) * 100, 100) : 0;
   const isCompleted = progressPercent >= 95;
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const card = cardRef.current;
-    if (!card) return;
+  const navigate = useNavigate();
 
-    const rect = card.getBoundingClientRect();
-
-    // Mouse position inside the card (left 0 / right 1)
-    const x = (e.clientX - rect.left) / rect.width;
-    const y = (e.clientY - rect.top) / rect.height;
-
-    // Converts (left is now -1 / right is still 1)
-    const mouseX = x * 2 - 1;
-    const mouseY = y * 2 - 1;
-
-    // Inclination intensity
-    const maxRotation = 2;
-
-    const rotateY = mouseX * maxRotation;
-    const rotateX = -mouseY * maxRotation;
-
-    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.02)`;
-  };
-
-  const handleMouseLeave = () => {
-    const card = cardRef.current;
-    if (!card) return;
-
-    card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale(1)';
-  };
+  const { handleMouseMove, handleMouseLeave } = useCardEffect({ cardRef });
 
   return (
     <div
       ref={cardRef}
-      onClick={() => onSelect(mediaItem)}
+      onClick={() => navigate(`/watch/${playable.id}?type=movie`)}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       className="group relative cursor-pointer select-none flex flex-col"
     >
-      <div className="group relative flex flex-col gap-2 cursor-pointer select-none">
+      <div className="group relative flex flex-col cursor-pointer select-none">
         {/* Cover container */}
-        <div className="relative aspect-2/3 w-full rounded bg-zinc-900 overflow-hidden border border-zinc-800 group-hover:border-zinc-700 transition-all shadow-lg group-hover:shadow-red-950/20">
+        <div className="relative aspect-2/3 w-full rounded-lg bg-zinc-900 overflow-hidden border border-zinc-800 group-hover:border-zinc-700 transition-all shadow-xl group-hover:shadow-red-950/20">
           {cover_art_url ? (
             <img src={cover_art_url} alt={title} className="w-full h-full object-cover" />
           ) : (
