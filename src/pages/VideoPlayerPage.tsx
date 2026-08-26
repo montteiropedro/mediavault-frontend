@@ -22,7 +22,7 @@ export function VideoPlayerPage() {
     setIsLoading(true);
 
     libraryService
-      .getMedia(id, type)
+      .getPlayable(id, type)
       .then(setMedia)
       .catch(() => setError('Failed to load video'))
       .finally(() => setIsLoading(false));
