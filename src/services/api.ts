@@ -1,26 +1,5 @@
 import axios from 'axios';
-
-export interface MediaItemProps {
-  id: number;
-  title: string;
-  duration: number;
-  media_type: string;
-  year?: number;
-  file_path: string;
-  cover_art_url: string | null;
-  video_url: string;
-  user_progress_seconds?: number;
-  audios: {
-    id: number;
-    language: string;
-    label: string;
-  }[];
-  subtitles: {
-    id: number;
-    language: string;
-    label: string;
-  }[];
-}
+import type { IPlayable } from '@/types';
 
 export const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000',
