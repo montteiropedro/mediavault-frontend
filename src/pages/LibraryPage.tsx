@@ -95,7 +95,7 @@ export function LibraryPage() {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-y-6 gap-x-2 lg:gap-x-4">
               {filteredMediaItems.map((item) =>
                 item.type === 'movie' ? (
-                  <MediaCard key={`movie_${item.id}`} media={item} />
+                  <MediaCard key={`movie_${item.id}`} playable={item} />
                 ) : (
                   <ShowCard key={`show_${item.id}`} show={item} />
                 )
