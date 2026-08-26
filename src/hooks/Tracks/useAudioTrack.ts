@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
+import type { IEpisode, IMovie } from '@/types';
 
 interface UseAudioTrackProps {
   videoRef: React.RefObject<HTMLVideoElement | null>;
   audioRef: React.RefObject<HTMLAudioElement | null>;
-  mediaItemId: number;
+  playable: IMovie | IEpisode;
   baseUrl: string;
 }
 
-export const useAudioTrack = ({ videoRef, audioRef, mediaItemId, baseUrl }: UseAudioTrackProps) => {
+export const useAudioTrack = ({ videoRef, audioRef, playable, baseUrl }: UseAudioTrackProps) => {
   const [selectedAudioTrackIndex, setSelectedAudioTrackIndex] = useState<number | null>(null);
   const [isAudioTrackLoading, setIsAudioTrackLoading] = useState(false);
 
@@ -52,7 +53,7 @@ export const useAudioTrack = ({ videoRef, audioRef, mediaItemId, baseUrl }: UseA
     setIsAudioTrackLoading(true);
 
     try {
-      audio.src = `${baseUrl}/api/v1/media_items/${mediaItemId}/stream_audio/${trackIndex}`;
+      audio.src = `${baseUrl}/api/v1/streaming/${playable.id}/audio/${trackIndex}?type=${playable.type}`;
       audio.muted = false;
       audio.volume = 1;
 

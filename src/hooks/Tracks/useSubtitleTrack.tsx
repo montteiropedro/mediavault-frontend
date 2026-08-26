@@ -1,13 +1,13 @@
 import { useState, useEffect, useMemo } from 'react';
-import type { MediaItemProps } from '../../services/api';
+import type { IEpisode, IMovie } from '@/types';
 
 interface useSubtitleTrackProps {
   videoRef: React.RefObject<HTMLVideoElement | null>;
-  mediaItem: MediaItemProps;
+  playable: IMovie | IEpisode;
   baseUrl: string;
 }
 
-export const useSubtitleTrack = ({ videoRef, mediaItem, baseUrl }: useSubtitleTrackProps) => {
+export const useSubtitleTrack = ({ videoRef, playable, baseUrl }: useSubtitleTrackProps) => {
   const [selectedSubtitleTrackIndex, setSelectedSubtitleTrackIndex] = useState<number | null>(null);
   const [activeSubtitleText, setActiveSubtitleText] = useState<string>('');
 
@@ -27,16 +27,16 @@ export const useSubtitleTrack = ({ videoRef, mediaItem, baseUrl }: useSubtitleTr
   };
 
   const subtitleTracks = useMemo(() => {
-    return mediaItem.subtitles.map((subtitle) => (
+    return playable.subtitle_tracks.map((subtitle) => (
       <track
         key={subtitle.id}
         kind="subtitles"
-        src={`${baseUrl}/api/v1/media_items/${mediaItem.id}/subtitle/${subtitle.id}`}
+        src={`${baseUrl}/api/v1/streaming/${playable.id}/subtitle/${subtitle.id}?type=${playable.type}`}
         srcLang={subtitle.language}
         label={subtitle.label}
       />
     ));
-  }, [mediaItem.id, mediaItem.subtitles, baseUrl]);
+  }, [playable.type, playable.id, playable.subtitle_tracks, baseUrl]);
 
   useEffect(() => {
     const video = videoRef.current;

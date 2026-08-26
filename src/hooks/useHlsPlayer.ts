@@ -1,14 +1,29 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Hls from 'hls.js';
+import { env } from '@/config/env';
+import type { IEpisode, IMovie } from '@/types';
 
 interface UseHlsPlayerProps {
   src: string;
   videoRef: React.RefObject<HTMLVideoElement | null>;
+  playable: IMovie | IEpisode;
 }
 
-export const useHlsPlayer = ({ src, videoRef }: UseHlsPlayerProps) => {
+export const useHlsPlayer = ({ videoRef, playable }: UseHlsPlayerProps) => {
   const hlsRef = useRef<Hls | null>(null);
   const [isVideoLoading, setIsVideoLoading] = useState(true);
+
+  const src = `${env.apiBaseUrl}/api/v1/streaming/${playable.id}/hls/playlist.m3u8`;
+
+  const createHlsLoader = useCallback(() => {
+    return class TypedLoader extends Hls.DefaultConfig.loader {
+      load(context, config, callbacks) {
+        const separator = context.url.includes('?') ? '&' : '?';
+        context.url += `${separator}type=${playable.type}`;
+        super.load(context, config, callbacks);
+      }
+    };
+  }, [playable]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -23,6 +38,7 @@ export const useHlsPlayer = ({ src, videoRef }: UseHlsPlayerProps) => {
 
     if (Hls.isSupported()) {
       const hls = new Hls({
+        loader: createHlsLoader(),
         maxBufferLength: 25,
         maxMaxBufferLength: 30,
         backBufferLength: 10,
@@ -60,7 +76,7 @@ export const useHlsPlayer = ({ src, videoRef }: UseHlsPlayerProps) => {
         hlsRef.current = null;
       }
     };
-  }, [src, videoRef]);
+  }, [src, videoRef, createHlsLoader]);
 
   return { isVideoLoading, setIsVideoLoading };
 };
