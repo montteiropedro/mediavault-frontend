@@ -14,7 +14,7 @@ export function Header({ searchTerm, setSearchTerm, isScanning, handleLibrarySca
   const isMobile = useIsMobile();
 
   return (
-    <header className="sticky top-0 z-50 transition-all duration-300 bg-primary flex items-center justify-between gap-4 py-4 px-4 sm:px-16">
+    <header className="sticky top-0 z-10 transition-all duration-300 bg-primary flex items-center justify-between gap-4 py-4 px-4 sm:px-16">
       <div className="uppercase flex items-center gap-2 sm:gap-3 text-base sm:text-lg md:text-xl lg:text-2xl">
         <h1 className="font-bold tracking-tight text-zinc-100">
           Media<span className="text-red-400">Vault</span>
@@ -54,7 +54,7 @@ export function Header({ searchTerm, setSearchTerm, isScanning, handleLibrarySca
           )}
 
           {isMobile && (
-            <div className="rounded-full fixed z-50 bottom-5 left-1/2 -translate-x-1/2 bg-secondary/80 backdrop-blur-md border border-white/5 flex items-center gap-1 h-14 p-1">
+            <div className="rounded-full fixed bottom-5 left-1/2 -translate-x-1/2 bg-secondary/80 backdrop-blur-md border border-white/5 flex items-center gap-1 h-14 p-1">
               <button
                 onClick={() => {
                   handleLibraryScan();

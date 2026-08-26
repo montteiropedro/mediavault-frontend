@@ -1,22 +1,21 @@
 import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router';
 import { X, Play, Pause, RotateCcw, RotateCw, Volume2, VolumeX, Maximize, LoaderCircle } from 'lucide-react';
-import { mediaItemsService, type MediaItemProps } from '../services/api';
-import { useFullscreenLandscapeVideo } from '../hooks/useFullscreenLandscapeVideo';
-import { useControlsVisibility } from '../hooks/useControlsVisibility';
-import { useHlsPlayer } from '../hooks/useHlsPlayer';
-import { useAudioTrack } from '../hooks/Tracks/useAudioTrack';
-import { useSubtitleTrack } from '../hooks/Tracks/useSubtitleTrack';
+import { libraryService } from '@/services/api';
+import { useFullscreenLandscapeVideo } from '@/hooks/useFullscreenLandscapeVideo';
+import { useControlsVisibility } from '@/hooks/useControlsVisibility';
+import { useHlsPlayer } from '@/hooks/useHlsPlayer';
+import { useAudioTrack } from '@/hooks/Tracks/useAudioTrack';
+import { useSubtitleTrack } from '@/hooks/Tracks/useSubtitleTrack';
 import { TrackOptions } from './Tracks/TrackOptions';
+import { env } from '@/config/env';
+import type { IEpisode, IMovie } from '@/types';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL;
-
-interface VideoModalProps {
-  mediaItem: MediaItemProps;
-  onClose: () => void;
-  onProgressUpdate: (mediaItemId: number, seconds: number) => void;
+interface VideoPlayerProps {
+  playable: IMovie | IEpisode;
 }
 
-export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalProps) {
+export function VideoPlayer({ playable }: VideoPlayerProps) {
   const videoContainerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -26,18 +25,17 @@ export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalP
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
 
-  const initialTime = mediaItem?.user_progress_seconds || 0;
+  const initialTime = playable.user_progress_seconds || 0;
   const currentProgressRef = useRef<number>(initialTime);
   const lastSavedTimeRef = useRef<number>(initialTime);
+
+  const navigate = useNavigate();
 
   //===========//
   // HLS setup //
   //===========//
 
-  const { isVideoLoading, setIsVideoLoading } = useHlsPlayer({
-    src: mediaItem.video_url,
-    videoRef,
-  });
+  const { isVideoLoading, setIsVideoLoading } = useHlsPlayer({ videoRef, playable });
 
   //================//
   // Track metadata //
@@ -49,7 +47,7 @@ export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalP
     setDuration(videoRef.current.duration);
     setIsVideoLoading(false);
 
-    const isCompleted = mediaItem?.duration && initialTime / mediaItem.duration >= 0.95;
+    const isCompleted = initialTime / playable.duration_seconds >= 0.95;
 
     if (initialTime > 0 && !isCompleted) {
       videoRef.current.currentTime = initialTime;
@@ -71,14 +69,14 @@ export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalP
   const { selectedAudioTrackIndex, isAudioTrackLoading, handleAudioChange } = useAudioTrack({
     videoRef,
     audioRef,
-    mediaItemId: mediaItem.id,
-    baseUrl: API_BASE_URL,
+    playable: playable,
+    baseUrl: env.apiBaseUrl,
   });
 
   const { selectedSubtitleTrackIndex, activeSubtitleText, handleSubtitleChange, subtitleTracks } = useSubtitleTrack({
     videoRef,
-    mediaItem: mediaItem,
-    baseUrl: API_BASE_URL,
+    playable: playable,
+    baseUrl: env.apiBaseUrl,
   });
 
   //=========================//
@@ -87,12 +85,11 @@ export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalP
 
   const saveProgressToBackend = async (time: number) => {
     // Prevents repeated calls for the same time
-    if (!mediaItem || Math.abs(time - lastSavedTimeRef.current) < 2) return;
+    if (!playable || Math.abs(time - lastSavedTimeRef.current) < 2) return;
 
     try {
       lastSavedTimeRef.current = time;
-      onProgressUpdate(mediaItem.id, time);
-      await mediaItemsService.saveProgress(mediaItem.id, time);
+      await libraryService.saveProgress(playable.id, playable.type, time);
     } catch (error) {
       console.error('Error saving progress:', error);
     }
@@ -114,7 +111,8 @@ export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalP
       const time = Math.floor(videoRef.current.currentTime);
       saveProgressToBackend(time);
     }
-    onClose();
+
+    navigate(-1);
   };
 
   //====================================================================//
@@ -206,14 +204,12 @@ export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalP
     }
   };
 
-  if (!mediaItem) return null;
-
   return (
     <div
       ref={videoContainerRef}
       onClick={handleVideoAreaInteraction}
       onMouseMove={showControls}
-      className="fixed z-50 inset-0 w-full h-full bg-black flex items-center justify-center overflow-hidden"
+      className="fixed z-50 inset-0 w-full h-full bg-black text-zinc-100 flex items-center justify-center overflow-hidden"
     >
       <div className="w-full h-full flex items-center justify-center">
         {(isAudioTrackLoading || isVideoLoading) && (
@@ -358,14 +354,14 @@ export function VideoModal({ mediaItem, onClose, onProgressUpdate }: VideoModalP
                   </button>
                 </div>
 
-                <span className="text-lg font-semibold truncate">{mediaItem.title}</span>
+                <span className="text-lg font-semibold truncate">{playable.title}</span>
               </>
             )}
 
             <div className={`flex items-center ${isMobile ? 'gap-12' : 'gap-3'}`}>
               {/* Audio and subtitle selector */}
               <TrackOptions
-                mediaItem={mediaItem}
+                playable={playable}
                 isMobile={isMobile}
                 videoRef={videoRef}
                 selectedAudioTrackIndex={selectedAudioTrackIndex}
