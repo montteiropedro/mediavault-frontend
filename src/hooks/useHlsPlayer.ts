@@ -23,7 +23,7 @@ export const useHlsPlayer = ({ videoRef, playable }: UseHlsPlayerProps) => {
         super.load(context, config, callbacks);
       }
     };
-  }, [playable]);
+  }, [playable.type]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -42,6 +42,9 @@ export const useHlsPlayer = ({ videoRef, playable }: UseHlsPlayerProps) => {
         maxBufferLength: 25,
         maxMaxBufferLength: 30,
         backBufferLength: 10,
+        xhrSetup: (xhr) => {
+          xhr.withCredentials = true;
+        },
       });
       hlsRef.current = hls;
 
