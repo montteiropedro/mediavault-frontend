@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { X, Settings } from 'lucide-react';
 import { useIsMobile } from '../hooks/useIsMobile';
+import { useAuth } from '@/hooks/useAuth';
 
 interface HeaderProps {
   searchTerm: string;
@@ -11,7 +12,20 @@ interface HeaderProps {
 
 export function Header({ searchTerm, setSearchTerm, isScanning, handleLibraryScan }: HeaderProps) {
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
+  const settingsRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
+  const { user, logout } = useAuth();
+
+  useEffect(() => {
+    const handleClickOutside = (e: PointerEvent) => {
+      if (settingsRef.current && !settingsRef.current.contains(e.target as Node)) {
+        setIsSettingsOpen(false);
+      }
+    };
+
+    document.addEventListener('pointerdown', handleClickOutside);
+    return () => document.removeEventListener('pointerdown', handleClickOutside);
+  }, []);
 
   return (
     <header className="sticky top-0 z-10 transition-all duration-300 bg-primary flex items-center justify-between gap-4 py-4 px-4 sm:px-16">
@@ -41,47 +55,87 @@ export function Header({ searchTerm, setSearchTerm, isScanning, handleLibrarySca
               </button>
             )}
           </div>
-
-          {!isMobile && (
-            <button
-              onClick={handleLibraryScan}
-              disabled={isScanning}
-              className="rounded-lg bg-zinc-800 hover:bg-zinc-700 text-sm font-medium transition-colors border border-zinc-700 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 px-4"
-            >
-              <Settings size={16} />
-              <span>{isScanning ? 'Varrendo Biblioteca...' : 'Varrer Biblioteca'}</span>
-            </button>
-          )}
-
-          {isMobile && (
-            <div className="rounded-full fixed bottom-5 left-1/2 -translate-x-1/2 bg-secondary/80 backdrop-blur-md border border-white/5 flex items-center gap-1 h-14 p-1">
-              <button
-                onClick={() => {
-                  handleLibraryScan();
-                }}
-                className={[
-                  'rounded-full cursor-pointer disabled:opacity-50 text-xs font-bold h-full flex-1 px-2',
-                  'active:bg-zinc-400/20 scale-100 active:scale-95 transition-transform duration-300',
-                  isSettingsOpen ? 'flex items-center justify-center gap-2 ' : 'hidden',
-                ].join(' ')}
-              >
-                {isScanning ? 'Varrendo Biblioteca...' : 'Varrer Biblioteca'}
-              </button>
-
-              <button
-                onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-                disabled={isScanning}
-                className={[
-                  'rounded-full flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 h-full w-16',
-                  'active:bg-zinc-400/20 scale-100 active:scale-95 transition-transform duration-300',
-                  isSettingsOpen ? 'bg-zinc-400/20' : '',
-                ].join(' ')}
-              >
-                <Settings size={20} />
-              </button>
-            </div>
-          )}
         </div>
+
+        {user && isMobile && (
+          <div className="rounded-full fixed bottom-5 left-1/2 -translate-x-1/2 bg-secondary/80 backdrop-blur-md border border-white/5 flex items-center gap-1 h-14 p-1">
+            <button
+              onClick={logout}
+              className={[
+                'rounded-full cursor-pointer disabled:opacity-50 text-xs font-bold h-full min-w-16 p-4',
+                'active:bg-zinc-400/20 scale-100 active:scale-95 transition duration-300',
+                isSettingsOpen ? 'flex items-center justify-center gap-2 ' : 'hidden',
+              ].join(' ')}
+            >
+              Sair
+            </button>
+
+            <button
+              onClick={() => {
+                handleLibraryScan();
+              }}
+              className={[
+                'rounded-full cursor-pointer disabled:opacity-50 text-xs font-bold h-full min-w-16 p-4',
+                'active:bg-zinc-400/20 scale-100 active:scale-95 transition duration-300',
+                isSettingsOpen ? 'flex items-center justify-center gap-2 ' : 'hidden',
+              ].join(' ')}
+            >
+              {isScanning ? 'Varrendo Biblioteca...' : 'Varrer Biblioteca'}
+            </button>
+
+            <button
+              onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+              disabled={isScanning}
+              className={[
+                'group rounded-full flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 h-full min-w-16 p-4',
+                'active:bg-zinc-400/20 scale-100 active:scale-95 transition duration-300',
+                isSettingsOpen ? 'bg-zinc-400/20' : '',
+              ].join(' ')}
+            >
+              <Settings
+                size={20}
+                className={`transition duration-300 ${isSettingsOpen ? 'rotate-90' : '-rotate-90'}`}
+              />
+            </button>
+          </div>
+        )}
+
+        {user && !isMobile && (
+          <div
+            ref={settingsRef}
+            onBlur={() => setIsSettingsOpen(false)}
+            className="relative flex items-center rounded-lg cursor-pointer gap-4 h-10"
+          >
+            <div
+              onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+              className={`group hover:bg-secondary rounded-lg size-10 flex items-center justify-center ${isSettingsOpen && 'bg-secondary'}`}
+            >
+              <Settings size={20} className="group-hover:rotate-90 transition duration-150" />
+            </div>
+
+            {isSettingsOpen && (
+              <ul className="absolute right-0 top-14 bg-secondary rounded-lg w-40 p-2">
+                <li>
+                  <button
+                    onClick={handleLibraryScan}
+                    disabled={isScanning}
+                    className="flex items-center hover:bg-zinc-700 text-sm font-medium transition-colors rounded-md cursor-pointer gap-2 px-4 h-10 w-full"
+                  >
+                    <span>{isScanning ? 'Varrendo Biblioteca...' : 'Varrer Biblioteca'}</span>
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={logout}
+                    className="flex items-center hover:bg-zinc-700 text-sm font-medium transition-colors rounded-md cursor-pointer gap-2 px-4 h-10 w-full"
+                  >
+                    Sair
+                  </button>
+                </li>
+              </ul>
+            )}
+          </div>
+        )}
       </div>
     </header>
   );

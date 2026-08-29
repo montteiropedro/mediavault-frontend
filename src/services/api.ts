@@ -4,6 +4,7 @@ import type { IEpisode, IMovie, IPlayable, IShow } from '@/types';
 
 export const api = axios.create({
   baseURL: env.apiBaseUrl,
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
