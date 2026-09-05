@@ -19,7 +19,7 @@ export function EpisodeCard({ episode }: EpisodeCardProps) {
   return (
     <div
       ref={cardRef}
-      onClick={() => navigate(`/watch/${episode.id}?type=episode`)}
+      onClick={() => navigate(`/player/${episode.type}/${episode.id}`)}
       className="group z-0 hover:z-30 relative cursor-pointer flex rounded-lg"
     >
       <div className="z-20 group relative flex lg:flex-col items-center gap-4 cursor-pointer w-full">
@@ -37,7 +37,7 @@ export function EpisodeCard({ episode }: EpisodeCardProps) {
             </div>
           ) : (
             <div className="w-full h-full flex items-center justify-center text-zinc-700 font-bold text-xs">
-              <ImageOff size={32} />
+              <Film size={32} />
             </div>
           )}
         </div>

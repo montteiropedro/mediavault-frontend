@@ -21,10 +21,12 @@ export function MediaCard({ playable }: MediaCardProps) {
 
   const { handleMouseMove, handleMouseLeave } = useCardEffect({ cardRef });
 
+  if (!playable.hls_url) return;
+
   return (
     <div
       ref={cardRef}
-      onClick={() => navigate(`/watch/${playable.id}?type=movie`)}
+      onClick={() => navigate(`/player/${playable.type}/${playable.id}`)}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       className="group relative cursor-pointer select-none flex flex-col"
@@ -36,7 +38,7 @@ export function MediaCard({ playable }: MediaCardProps) {
             <img src={cover_art_url} alt={title} className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-zinc-700 font-bold text-xs">
-              <ImageOff size={32} />
+              <Film size={32} />
             </div>
           )}
 

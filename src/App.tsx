@@ -20,7 +20,7 @@ export function App() {
 
       <Route element={<ProtectedRoute />}>
         <Route path="/" element={<LibraryPage />} />
-        <Route path="/watch/:id" element={<VideoPlayerPage />} />
+        <Route path="/player/:type/:id" element={<VideoPlayerPage />} />
       </Route>
     </Routes>
   );
