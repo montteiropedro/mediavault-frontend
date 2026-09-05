@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { X, Play, Pause, RotateCcw, RotateCw, Volume2, VolumeX, Maximize, LoaderCircle } from 'lucide-react';
 import { libraryService } from '@/services/api';
@@ -7,8 +7,8 @@ import { useControlsVisibility } from '@/hooks/useControlsVisibility';
 import { useHlsPlayer } from '@/hooks/useHlsPlayer';
 import { useHlsSubtitleTrack } from '@/hooks/Tracks/useHlsSubtitleTracks';
 import { TrackOptions } from './Tracks/TrackOptions';
-import { env } from '@/config/env';
-import type { IEpisode, IMovie } from '@/types';
+import type { Playable } from '@/types';
+import { useVideoPlayerShortcuts } from '@/hooks/useVideoPlayerShortcuts';
 
 interface VideoPlayerProps {
   playable: IMovie | IEpisode;
@@ -131,38 +131,13 @@ export function VideoPlayer({ playable }: VideoPlayerProps) {
     }
   };
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      switch (e.code) {
-        case 'Space':
-          e.preventDefault();
-          togglePlay();
-          break;
-        case 'ArrowLeft':
-          e.preventDefault();
-          skipTime(-10);
-          break;
-        case 'ArrowRight':
-          e.preventDefault();
-          skipTime(10);
-          break;
-        case 'KeyM':
-          e.preventDefault();
-          toggleMute();
-          break;
-        case 'KeyF':
-          e.preventDefault();
-          toggleFullscreen();
-          break;
-        case 'Escape':
-          handleClose();
-          break;
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  useVideoPlayerShortcuts({
+    onTogglePlay: togglePlay,
+    onSkip: skipTime,
+    onToggleMute: toggleMute,
+    onToggleFullscreen: toggleFullscreen,
+    onClose: handleClose,
+  });
 
   const { isMobile, enterFullscreenLandscape } = useFullscreenLandscapeVideo(videoContainerRef, handleClose);
   const { controlsVisible, showControls, hideControls, onControlsMouseEnter, onControlsMouseLeave } =
