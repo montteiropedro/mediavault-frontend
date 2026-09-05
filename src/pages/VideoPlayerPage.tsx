@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useSearchParams } from 'react-router';
+import { useParams } from 'react-router';
 import { LoaderCircle } from 'lucide-react';
 import { VideoPlayer } from '@/components/VideoPlayer';
 import { useIsMobile } from '@/hooks/useIsMobile';
@@ -7,9 +7,8 @@ import { libraryService } from '@/services/api';
 import type { Playable } from '@/types';
 
 export function VideoPlayerPage() {
-  const { id } = useParams<{ id: string }>();
-  const [searchParams] = useSearchParams();
-  const type = searchParams.get('type') as 'movie' | 'episode' | null;
+  const { id, type } = useParams<{ id: string; type: 'movie' | 'episode' }>();
+
   const isMobile = useIsMobile();
 
   const [playable, setPlayable] = useState<Playable | null>(null);
@@ -18,16 +17,25 @@ export function VideoPlayerPage() {
   useEffect(() => {
     if (!type || !id) return;
 
-    async function loadInitialData() {
+    const playableType = type;
+    const playableId = id;
+
+    async function loadPlayable() {
       try {
-        const data = await libraryService.getPlayable(id, type);
-        setPlayable(data);
+        const item = await libraryService.getPlayable(playableId, playableType);
+
+        if (!item.playable || !item.hls_url) {
+          setError('This item cannot be played');
+          return;
+        }
+
+        setPlayable(item);
       } catch {
         setError('Failed to load video');
       }
     }
 
-    loadInitialData();
+    loadPlayable();
   }, [type, id]);
 
   if (!playable && !error) {
