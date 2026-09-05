@@ -4,14 +4,14 @@ import { LoaderCircle, X } from 'lucide-react';
 import { EpisodeGrid } from './EpisodeGrid';
 import { SeasonList } from './SeasonList';
 import { libraryService } from '@/services/api';
-import type { IShow } from '@/types';
+import type { Show } from '@/types';
 
-interface ShowModalProps {
+type ShowModalProps = {
   showId: string;
-}
+};
 
 export function ShowModal({ showId }: ShowModalProps) {
-  const [show, setShow] = useState<IShow | null>(null);
+  const [show, setShow] = useState<Show | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
 
   const currentSeasonId = searchParams.get('season');

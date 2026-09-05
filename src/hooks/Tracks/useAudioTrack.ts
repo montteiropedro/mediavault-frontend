@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import type { IEpisode, IMovie } from '@/types';
+import type { Playable } from '@/types';
 
 interface UseAudioTrackProps {
   videoRef: React.RefObject<HTMLVideoElement | null>;
   audioRef: React.RefObject<HTMLAudioElement | null>;
-  playable: IMovie | IEpisode;
+  playable: Playable;
   baseUrl: string;
 }
 

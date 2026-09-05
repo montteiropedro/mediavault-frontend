@@ -3,24 +3,24 @@ import { MediaCard } from '@/components/MediaCard';
 import { Header } from '@/components/Header';
 import { ShowCard } from '@/components/ShowCard';
 import { libraryService } from '@/services/api';
-import type { IPlayable } from '@/types';
+import type { Library } from '@/types';
 
 export function LibraryPage() {
-  const [mediaItems, setMediaItems] = useState<IPlayable>({ movies: [], shows: [] });
+  const [library, setLibrary] = useState<Library>({ movies: [], shows: [] });
   const [loading, setLoading] = useState(true);
   const [isScanning, setIsScanning] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  const filteredMediaItems = [
-    ...mediaItems.movies.filter((movie) => movie.title.toLowerCase().includes(searchTerm.toLowerCase())),
-    ...mediaItems.shows.filter((show) => show.title.toLowerCase().includes(searchTerm.toLowerCase())),
+  const filteredLibrary = [
+    ...library.movies.filter((movie) => movie.title.toLowerCase().includes(searchTerm.toLowerCase())),
+    ...library.shows.filter((show) => show.title.toLowerCase().includes(searchTerm.toLowerCase())),
   ];
 
-  const fetchMediaItems = async () => {
+  const fetchLibrary = async () => {
     try {
       setLoading(true);
       const data = await libraryService.getAll();
-      setMediaItems(data);
+      setLibrary(data);
     } catch (error) {
       console.error('Error retrieving media:', error);
     } finally {
@@ -32,7 +32,7 @@ export function LibraryPage() {
     async function loadInitialData() {
       try {
         const data = await libraryService.getAll();
-        setMediaItems(data);
+        setLibrary(data);
       } catch (error) {
         console.error('Error retrieving media:', error);
       } finally {
@@ -47,7 +47,7 @@ export function LibraryPage() {
     try {
       setIsScanning(true);
       await libraryService.triggerScan();
-      await fetchMediaItems();
+      await fetchLibrary();
     } catch (error) {
       console.error('Error scanning library:', error);
     } finally {
@@ -74,14 +74,14 @@ export function LibraryPage() {
                 {searchTerm ? 'Resultados da busca' : 'Sua Coleção'}
               </h2>
               <span className="text-xs font-semibold text-zinc-500 bg-zinc-900 px-2 py-0.5 rounded-md border border-zinc-800">
-                {filteredMediaItems.length}
+                {filteredLibrary.length}
               </span>
             </div>
           </h2>
 
           {loading ? (
             <div className="text-center py-20 text-zinc-500">Carregando mídias...</div>
-          ) : filteredMediaItems.length === 0 && searchTerm ? (
+          ) : filteredLibrary.length === 0 && searchTerm ? (
             <div className="py-16 text-center bg-zinc-900/50 border border-zinc-800/80 rounded-xl">
               <p className="text-zinc-400 font-medium">Nenhuma mídia encontrada para "{searchTerm}"</p>
               <button
@@ -93,7 +93,7 @@ export function LibraryPage() {
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-y-6 gap-x-2 lg:gap-x-4">
-              {filteredMediaItems.map((item) =>
+              {filteredLibrary.map((item) =>
                 item.type === 'movie' ? (
                   <MediaCard key={`movie_${item.id}`} playable={item} />
                 ) : (

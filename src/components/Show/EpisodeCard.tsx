@@ -1,11 +1,11 @@
 import { useRef } from 'react';
 import { useNavigate } from 'react-router';
-import { ImageOff } from 'lucide-react';
-import type { IEpisode } from '@/types';
+import { Film } from 'lucide-react';
+import type { Episode } from '@/types';
 
-interface EpisodeCardProps {
-  episode: IEpisode;
-}
+type EpisodeCardProps = {
+  episode: Episode;
+};
 
 export function EpisodeCard({ episode }: EpisodeCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
