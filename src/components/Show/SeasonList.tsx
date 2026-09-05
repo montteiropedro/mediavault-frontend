@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
-import type { ISeason } from '@/types';
+import type { Season } from '@/types';
 
 interface SeasonListProps {
-  seasons: ISeason[];
-  currentSeason: ISeason;
+  seasons: Season[];
+  currentSeason: Season;
   setCurrentSeasonId: (seasonId: string) => void;
 }
 

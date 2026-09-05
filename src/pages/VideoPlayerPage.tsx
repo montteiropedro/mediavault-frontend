@@ -4,7 +4,7 @@ import { LoaderCircle } from 'lucide-react';
 import { VideoPlayer } from '@/components/VideoPlayer';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { libraryService } from '@/services/api';
-import type { IEpisode, IMovie } from '@/types';
+import type { Playable } from '@/types';
 
 export function VideoPlayerPage() {
   const { id } = useParams<{ id: string }>();
@@ -12,7 +12,7 @@ export function VideoPlayerPage() {
   const type = searchParams.get('type') as 'movie' | 'episode' | null;
   const isMobile = useIsMobile();
 
-  const [playable, setPlayable] = useState<IMovie | IEpisode | null>(null);
+  const [playable, setPlayable] = useState<Playable | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {

@@ -1,11 +1,11 @@
 import { useRef } from 'react';
 import { useNavigate } from 'react-router';
-import { ImageOff } from 'lucide-react';
+import { Film } from 'lucide-react';
 import { useCardEffect } from '@/hooks/useCardEffect';
-import type { IEpisode, IMovie } from '@/types';
+import type { Movie } from '@/types';
 
 interface MediaCardProps {
-  playable: IMovie | IEpisode;
+  playable: Movie;
 }
 
 export function MediaCard({ playable }: MediaCardProps) {

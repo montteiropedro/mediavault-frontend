@@ -3,11 +3,11 @@ import { useSearchParams } from 'react-router';
 import { ImageOff } from 'lucide-react';
 import { ShowModal } from './Show/ShowModal';
 import { useCardEffect } from '@/hooks/useCardEffect';
-import type { IShow } from '@/types';
+import type { Show } from '@/types';
 
-interface ShowCardProps {
-  show: IShow;
-}
+type ShowCardProps = {
+  show: Show;
+};
 
 export function ShowCard({ show }: ShowCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);

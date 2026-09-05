@@ -11,7 +11,7 @@ import type { Playable } from '@/types';
 import { useVideoPlayerShortcuts } from '@/hooks/useVideoPlayerShortcuts';
 
 interface VideoPlayerProps {
-  playable: IMovie | IEpisode;
+  playable: Playable;
 }
 
 export function VideoPlayer({ playable }: VideoPlayerProps) {

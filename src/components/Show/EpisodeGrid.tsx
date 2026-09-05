@@ -1,8 +1,8 @@
 import { EpisodeCard } from './EpisodeCard';
-import type { IEpisode } from '@/types';
+import type { Episode } from '@/types';
 
 interface EpisodeGridProps {
-  episodes: IEpisode[];
+  episodes: Episode[];
 }
 
 export function EpisodeGrid({ episodes }: EpisodeGridProps) {
@@ -13,7 +13,7 @@ export function EpisodeGrid({ episodes }: EpisodeGridProps) {
           'grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-y-6 lg:gap-y-12 lg:gap-x-6',
         ].join(' ')}
       >
-        {episodes.map((episode: IEpisode) => (
+        {episodes.map((episode: Episode) => (
           <EpisodeCard key={episode.id} episode={episode} />
         ))}
       </div>
