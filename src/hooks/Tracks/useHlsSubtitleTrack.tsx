@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 
-type UseSubtitleTrackProps = {
+type UseHlsSubtitleTrackProps = {
   videoRef: React.RefObject<HTMLVideoElement | null>;
 };
 
-export const useSubtitleTrack = ({ videoRef }: UseSubtitleTrackProps) => {
+export const useHlsSubtitleTrack = ({ videoRef }: UseHlsSubtitleTrackProps) => {
   const [selectedSubtitle, setSelectedSubtitle] = useState<number | null>(null);
   const [activeSubtitleText, setActiveSubtitleText] = useState<string>('');
 
