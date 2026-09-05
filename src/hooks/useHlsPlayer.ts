@@ -1,29 +1,21 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Hls from 'hls.js';
-import { env } from '@/config/env';
-import type { IEpisode, IMovie } from '@/types';
+import type { Playable } from '@/types';
+import { useHlsAudioTracks } from './Tracks/useHlsAudioTracks';
 
-interface UseHlsPlayerProps {
-  src: string;
+type UseHlsPlayerProps = {
   videoRef: React.RefObject<HTMLVideoElement | null>;
-  playable: IMovie | IEpisode;
-}
+  playable: Playable;
+};
 
 export const useHlsPlayer = ({ videoRef, playable }: UseHlsPlayerProps) => {
   const hlsRef = useRef<Hls | null>(null);
   const [isVideoLoading, setIsVideoLoading] = useState(true);
 
-  const src = `${env.apiBaseUrl}/api/v1/streaming/${playable.id}/hls/playlist.m3u8`;
+  const src = `${playable.hls_url}`;
+  const initialTime = playable.user_progress_seconds || 0;
 
-  const createHlsLoader = useCallback(() => {
-    return class TypedLoader extends Hls.DefaultConfig.loader {
-      load(context, config, callbacks) {
-        const separator = context.url.includes('?') ? '&' : '?';
-        context.url += `${separator}type=${playable.type}`;
-        super.load(context, config, callbacks);
-      }
-    };
-  }, [playable.type]);
+  const { audioTracks, changeAudio, selectedAudio, attach } = useHlsAudioTracks();
 
   useEffect(() => {
     const video = videoRef.current;
@@ -38,7 +30,7 @@ export const useHlsPlayer = ({ videoRef, playable }: UseHlsPlayerProps) => {
 
     if (Hls.isSupported()) {
       const hls = new Hls({
-        loader: createHlsLoader(),
+        startPosition: initialTime,
         maxBufferLength: 25,
         maxMaxBufferLength: 30,
         backBufferLength: 10,
@@ -47,6 +39,8 @@ export const useHlsPlayer = ({ videoRef, playable }: UseHlsPlayerProps) => {
         },
       });
       hlsRef.current = hls;
+
+      const detachAudioTracks = attach(hls);
 
       hls.loadSource(src);
       hls.attachMedia(video);
@@ -67,19 +61,18 @@ export const useHlsPlayer = ({ videoRef, playable }: UseHlsPlayerProps) => {
             break;
         }
       });
+
+      return () => {
+        detachAudioTracks();
+        hls.destroy();
+        hlsRef.current = null;
+      };
     } else if (video.canPlayType('application/vnd.apple.mpegurl') === 'probably') {
       video.src = src;
     } else {
       console.error('Browser does not support HLS');
     }
+  }, [src, videoRef, initialTime, attach]);
 
-    return () => {
-      if (hlsRef.current) {
-        hlsRef.current.destroy();
-        hlsRef.current = null;
-      }
-    };
-  }, [src, videoRef, createHlsLoader]);
-
-  return { isVideoLoading, setIsVideoLoading };
+  return { isVideoLoading, setIsVideoLoading, audioTracks, changeAudio, selectedAudio };
 };

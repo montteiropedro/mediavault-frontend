@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { env } from '@/config/env';
-import type { IEpisode, IMovie, IPlayable, IShow } from '@/types';
+import type { Episode, Library, Movie, Show } from '@/types';
 
 export const api = axios.create({
   baseURL: env.apiBaseUrl,
@@ -11,20 +11,18 @@ export const api = axios.create({
 });
 
 export const libraryService = {
-  getAll: async (): Promise<IPlayable> => {
-    const response = await api.get<IPlayable>('/api/v1/library');
+  getAll: async (): Promise<Library> => {
+    const response = await api.get<Library>('/api/v1/library');
     return response.data;
   },
 
-  getPlayable: async (id: string, type?: 'movie' | 'episode'): Promise<IEpisode | IMovie> => {
-    const params = { params: { type } };
-
-    const response = await api.get<IEpisode | IMovie>(`/api/v1/library/${id}`, params);
+  getPlayable: async (id: string, type?: 'movie' | 'episode'): Promise<Episode | Movie> => {
+    const response = await api.get<Episode | Movie>(`/api/v1/library/${type}/${id}`);
     return response.data;
   },
 
-  getShow: async (id: string): Promise<IShow> => {
-    const response = await api.get<IShow>(`/api/v1/library/${id}?type=show`);
+  getShow: async (id: string): Promise<Show> => {
+    const response = await api.get<Show>(`/api/v1/library/show/${id}`);
     return response.data;
   },
 

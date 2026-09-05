@@ -5,8 +5,7 @@ import { libraryService } from '@/services/api';
 import { useFullscreenLandscapeVideo } from '@/hooks/useFullscreenLandscapeVideo';
 import { useControlsVisibility } from '@/hooks/useControlsVisibility';
 import { useHlsPlayer } from '@/hooks/useHlsPlayer';
-import { useAudioTrack } from '@/hooks/Tracks/useAudioTrack';
-import { useSubtitleTrack } from '@/hooks/Tracks/useSubtitleTrack';
+import { useHlsSubtitleTrack } from '@/hooks/Tracks/useHlsSubtitleTracks';
 import { TrackOptions } from './Tracks/TrackOptions';
 import { env } from '@/config/env';
 import type { IEpisode, IMovie } from '@/types';
@@ -18,7 +17,6 @@ interface VideoPlayerProps {
 export function VideoPlayer({ playable }: VideoPlayerProps) {
   const videoContainerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const audioRef = useRef<HTMLAudioElement>(null);
 
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
@@ -35,7 +33,14 @@ export function VideoPlayer({ playable }: VideoPlayerProps) {
   // HLS setup //
   //===========//
 
-  const { isVideoLoading, setIsVideoLoading } = useHlsPlayer({ videoRef, playable });
+  const { isVideoLoading, setIsVideoLoading, audioTracks, selectedAudio, changeAudio } = useHlsPlayer({
+    videoRef,
+    playable,
+  });
+
+  const { selectedSubtitle, activeSubtitleText, handleSubtitleChange } = useHlsSubtitleTrack({
+    videoRef,
+  });
 
   //================//
   // Track metadata //
@@ -46,38 +51,7 @@ export function VideoPlayer({ playable }: VideoPlayerProps) {
 
     setDuration(videoRef.current.duration);
     setIsVideoLoading(false);
-
-    const isCompleted = initialTime / playable.duration_seconds >= 0.95;
-
-    if (initialTime > 0 && !isCompleted) {
-      videoRef.current.currentTime = initialTime;
-    }
   };
-
-  const handleAudioLoadedMetadata = () => {
-    const video = videoRef.current;
-    const audio = audioRef.current;
-    if (!video || !audio) return;
-
-    audio.currentTime = video.currentTime;
-  };
-
-  //=========================//
-  // Audio & Subtitle Tracks //
-  //=========================//
-
-  const { selectedAudioTrackIndex, isAudioTrackLoading, handleAudioChange } = useAudioTrack({
-    videoRef,
-    audioRef,
-    playable: playable,
-    baseUrl: env.apiBaseUrl,
-  });
-
-  const { selectedSubtitleTrackIndex, activeSubtitleText, handleSubtitleChange, subtitleTracks } = useSubtitleTrack({
-    videoRef,
-    playable: playable,
-    baseUrl: env.apiBaseUrl,
-  });
 
   //=========================//
   // Persistence of progress //
@@ -212,7 +186,7 @@ export function VideoPlayer({ playable }: VideoPlayerProps) {
       className="fixed z-50 inset-0 w-full h-full bg-black text-zinc-100 flex items-center justify-center overflow-hidden"
     >
       <div className="w-full h-full flex items-center justify-center">
-        {(isAudioTrackLoading || isVideoLoading) && (
+        {isVideoLoading && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20">
             <LoaderCircle size={isMobile ? 48 : 82} className="animate-spin" />
           </div>
@@ -232,15 +206,6 @@ export function VideoPlayer({ playable }: VideoPlayerProps) {
             }
           }}
           className="w-full h-full object-contain"
-        >
-          {subtitleTracks}
-        </video>
-
-        <audio
-          ref={audioRef}
-          preload="auto"
-          onLoadedMetadata={handleAudioLoadedMetadata}
-          className="absolute inset-0 z-50"
         />
 
         {/* Custom subtitle overlay */}
@@ -270,7 +235,7 @@ export function VideoPlayer({ playable }: VideoPlayerProps) {
         </div>
 
         {/* Central controls */}
-        {isMobile && !isAudioTrackLoading && (
+        {isMobile && (
           <div className="flex items-center justify-center gap-16 py-2 px-4">
             <button
               onClick={(e) => {
@@ -361,13 +326,14 @@ export function VideoPlayer({ playable }: VideoPlayerProps) {
             <div className={`flex items-center ${isMobile ? 'gap-12' : 'gap-3'}`}>
               {/* Audio and subtitle selector */}
               <TrackOptions
-                playable={playable}
                 isMobile={isMobile}
                 videoRef={videoRef}
-                selectedAudioTrackIndex={selectedAudioTrackIndex}
-                selectedSubtitleTrackIndex={selectedSubtitleTrackIndex}
-                handleAudioChange={handleAudioChange}
-                handleSubtitleChange={handleSubtitleChange}
+                audioTracks={audioTracks}
+                selectedAudio={selectedAudio}
+                onAudioChange={changeAudio}
+                subtitleTracks={playable.subtitle_tracks}
+                selectedSubtitle={selectedSubtitle}
+                onSubtitleChange={handleSubtitleChange}
               />
 
               {/* Fullscreen */}

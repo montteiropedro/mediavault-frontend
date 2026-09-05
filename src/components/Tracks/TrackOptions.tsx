@@ -1,26 +1,31 @@
 import { useRef, useState } from 'react';
 import { Captions } from 'lucide-react';
 import { TrackList } from './TrackList';
-import type { IMovie, IEpisode } from '@/types';
+import type { AudioTrack, SubtitleTrack } from '@/types';
 
-interface TrackOptionsProps {
-  playable: IMovie | IEpisode;
+type TrackOptionsProps = {
   isMobile: boolean;
   videoRef: React.RefObject<HTMLVideoElement | null>;
-  selectedAudioTrackIndex: number | null;
-  selectedSubtitleTrackIndex: number | null;
-  handleAudioChange: (id: number | null) => void;
-  handleSubtitleChange: (id: number | null) => void;
-}
+
+  audioTracks: AudioTrack[];
+  selectedAudio: number;
+
+  subtitleTracks: SubtitleTrack[];
+  selectedSubtitle: number | null;
+
+  onAudioChange: (id: number) => void;
+  onSubtitleChange: (id: number | null) => void;
+};
 
 export function TrackOptions({
-  playable,
   isMobile,
   videoRef,
-  selectedAudioTrackIndex,
-  selectedSubtitleTrackIndex,
-  handleAudioChange,
-  handleSubtitleChange,
+  audioTracks,
+  selectedAudio,
+  subtitleTracks,
+  selectedSubtitle,
+  onAudioChange,
+  onSubtitleChange,
 }: TrackOptionsProps) {
   const [showMobileGradient, setShowMobileGradient] = useState<boolean>(true);
   const [isOptionsOpen, setIsOptionsOpen] = useState(false);
@@ -65,20 +70,21 @@ export function TrackOptions({
         <div className="fixed z-50 inset-0 bg-black flex flex-col pl-36 py-4">
           <div className="flex justify-center h-full">
             <TrackList
+              kind="audio"
               isMobile={isMobile}
               title="Áudio"
-              items={playable.audio_tracks}
-              selectedId={selectedAudioTrackIndex}
-              onSelect={handleAudioChange}
+              items={audioTracks}
+              selectedTrack={selectedAudio}
+              onSelect={onAudioChange}
               onScroll={handleScroll}
             />
             <TrackList
+              kind="subtitle"
               isMobile={isMobile}
               title="Legenda"
-              offButton={true}
-              items={playable.subtitle_tracks}
-              selectedId={selectedSubtitleTrackIndex}
-              onSelect={handleSubtitleChange}
+              items={subtitleTracks}
+              selectedTrack={selectedSubtitle}
+              onSelect={onSubtitleChange}
               onScroll={handleScroll}
             />
           </div>
@@ -100,19 +106,20 @@ export function TrackOptions({
         <div className="group-hover:flex hidden absolute bottom-full -right-4 pb-4">
           <div className="flex gap-2 bg-secondary p-2 rounded">
             <TrackList
+              kind="audio"
               isMobile={isMobile}
               title="Áudio"
-              items={playable.audio_tracks}
-              selectedId={selectedAudioTrackIndex}
-              onSelect={handleAudioChange}
+              items={audioTracks}
+              selectedTrack={selectedAudio}
+              onSelect={onAudioChange}
             />
             <TrackList
+              kind="subtitle"
               isMobile={isMobile}
               title="Legenda"
-              offButton={true}
-              items={playable.subtitle_tracks}
-              selectedId={selectedSubtitleTrackIndex}
-              onSelect={handleSubtitleChange}
+              items={subtitleTracks}
+              selectedTrack={selectedSubtitle}
+              onSelect={onSubtitleChange}
             />
           </div>
         </div>
