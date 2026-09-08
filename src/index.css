@@ -1,5 +1,12 @@
 @import 'tailwindcss';
 
+:root {
+  --safe-top: env(safe-area-inset-top, 100px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+}
+
 #root {
   width: 100%;
   max-width: 100%;
@@ -9,9 +16,11 @@
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
+  background-color: var(--color-primary);
 }
 
-html {
+html,
+body {
   background-color: var(--color-primary);
 }
 
@@ -58,6 +67,11 @@ code {
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background-color: #71717a;
+}
+
+.ios-player-safe-area {
+  padding-left: var(--safe-left);
+  padding-right: var(--safe-right);
 }
 
 @theme {

@@ -1,16 +1,16 @@
 import { useCallback, useEffect, useState, type RefObject } from 'react';
-import { useIsMobile } from './useIsMobile';
+import { usePlatform } from './usePlatform';
 
 export function useFullscreenLandscapeVideo(
-  videoRef: RefObject<HTMLVideoElement | HTMLDivElement | null>,
+  videoContainerRef: RefObject<HTMLVideoElement | HTMLDivElement | null>,
   handleClose?: () => void
 ) {
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
-  const isMobile = useIsMobile();
+  const { isAndroid } = usePlatform();
 
   const enterFullscreenLandscape = useCallback(async () => {
-    const video = videoRef.current;
-    if (!video || !isMobile) return;
+    const video = videoContainerRef.current;
+    if (!video || !isAndroid) return;
 
     try {
       if (!video.requestFullscreen) return;
@@ -23,14 +23,14 @@ export function useFullscreenLandscapeVideo(
     } catch (err) {
       console.warn('Could not force fullscreen/landscape:', err);
     }
-  }, [videoRef, isMobile]);
+  }, [videoContainerRef, isAndroid]);
 
   useEffect(() => {
     const handleFullscreenChange = () => {
       const isNowFullscreen = !!document.fullscreenElement;
 
       setIsFullscreen((wasFullscreen) => {
-        if (wasFullscreen && !isNowFullscreen && isMobile) {
+        if (wasFullscreen && !isNowFullscreen && isAndroid) {
           handleClose?.();
         }
 
@@ -40,7 +40,7 @@ export function useFullscreenLandscapeVideo(
 
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
-  }, [handleClose, isMobile]);
+  }, [handleClose, isAndroid]);
 
-  return { isMobile, isFullscreen, enterFullscreenLandscape };
+  return { isFullscreen, enterFullscreenLandscape };
 }

@@ -1,14 +1,16 @@
 import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { X, Play, Pause, RotateCcw, RotateCw, Volume2, VolumeX, Maximize, LoaderCircle } from 'lucide-react';
 import { libraryService } from '@/services/api';
+import { usePlatform } from '@/hooks/usePlatform';
 import { useFullscreenLandscapeVideo } from '@/hooks/useFullscreenLandscapeVideo';
 import { useControlsVisibility } from '@/hooks/useControlsVisibility';
 import { useHlsPlayer } from '@/hooks/useHlsPlayer';
 import { useHlsSubtitleTrack } from '@/hooks/Tracks/useHlsSubtitleTracks';
-import { TrackOptions } from './Tracks/TrackOptions';
-import type { Playable } from '@/types';
 import { useVideoPlayerShortcuts } from '@/hooks/useVideoPlayerShortcuts';
+import { PlayerControls } from '@/components/Player/PlayerControls';
+import { Loading } from '@/components/Loading';
+import { Subtitles } from '@/components/Player/subtitles';
+import type { Playable } from '@/types';
 
 interface VideoPlayerProps {
   playable: Playable;
@@ -28,6 +30,9 @@ export function VideoPlayer({ playable }: VideoPlayerProps) {
   const lastSavedTimeRef = useRef<number>(initialTime);
 
   const navigate = useNavigate();
+  const { isMobile, isIOS } = usePlatform();
+  const { controlsVisible, showControls, hideControls, onControlsMouseEnter, onControlsMouseLeave } =
+    useControlsVisibility(videoRef);
 
   //===========//
   // HLS setup //
@@ -74,10 +79,8 @@ export function VideoPlayer({ playable }: VideoPlayerProps) {
 
     const time = Math.floor(videoRef.current.currentTime);
 
-    if (time > 0 && time % 5 === 0) {
-      setCurrentTime(time);
-      currentProgressRef.current = time;
-    }
+    currentProgressRef.current = time;
+    setCurrentTime(time);
   };
 
   const handleClose = () => {
@@ -89,9 +92,9 @@ export function VideoPlayer({ playable }: VideoPlayerProps) {
     navigate(-1);
   };
 
-  //====================================================================//
-  // Navigation & Control functions (+/- 10s, play/pause, fullscreen)   //
-  //====================================================================//
+  //===================//
+  // Playback controls //
+  //===================//
 
   const togglePlay = () => {
     if (!videoRef.current) return;
@@ -112,6 +115,8 @@ export function VideoPlayer({ playable }: VideoPlayerProps) {
       0,
       Math.min(videoRef.current.duration, videoRef.current.currentTime + seconds)
     );
+
+    setCurrentTime(Math.floor(videoRef.current.currentTime));
   };
 
   const toggleMute = () => {
@@ -131,6 +136,14 @@ export function VideoPlayer({ playable }: VideoPlayerProps) {
     }
   };
 
+  const handleSeek = (time: number) => {
+    if (videoRef.current) {
+      videoRef.current.currentTime = time;
+    }
+
+    setCurrentTime(time);
+  };
+
   useVideoPlayerShortcuts({
     onTogglePlay: togglePlay,
     onSkip: skipTime,
@@ -138,10 +151,6 @@ export function VideoPlayer({ playable }: VideoPlayerProps) {
     onToggleFullscreen: toggleFullscreen,
     onClose: handleClose,
   });
-
-  const { isMobile, enterFullscreenLandscape } = useFullscreenLandscapeVideo(videoContainerRef, handleClose);
-  const { controlsVisible, showControls, hideControls, onControlsMouseEnter, onControlsMouseLeave } =
-    useControlsVisibility(videoRef);
 
   const handleVideoAreaInteraction = () => {
     if (isMobile && !controlsVisible) {
@@ -153,21 +162,20 @@ export function VideoPlayer({ playable }: VideoPlayerProps) {
     }
   };
 
+  const { enterFullscreenLandscape } = useFullscreenLandscapeVideo(videoContainerRef, handleClose);
+
   return (
     <div
       ref={videoContainerRef}
       onClick={handleVideoAreaInteraction}
       onMouseMove={showControls}
-      className="fixed z-50 inset-0 w-full h-full bg-black text-zinc-100 flex items-center justify-center overflow-hidden"
+      className={`relative w-dvw h-dvh bg-black text-zinc-100 flex items-center justify-center overflow-hidden ${isIOS && 'ios-player-safe-area'}`}
     >
-      <div className="w-full h-full flex items-center justify-center">
-        {isVideoLoading && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20">
-            <LoaderCircle size={isMobile ? 48 : 82} className="animate-spin" />
-          </div>
-        )}
+      {isVideoLoading && <Loading size="lg" className="absolute inset-0" />}
 
+      <div className="size-full flex items-center justify-center">
         <video
+          controls={isIOS}
           ref={videoRef}
           crossOrigin="anonymous"
           autoPlay
@@ -180,160 +188,45 @@ export function VideoPlayer({ playable }: VideoPlayerProps) {
               saveProgressToBackend(time);
             }
           }}
-          className="w-full h-full object-contain"
+          className="size-full object-contain"
         />
 
-        {/* Custom subtitle overlay */}
-        {activeSubtitleText && (
-          <div
-            className={`absolute z-10 left-1/2 -translate-x-1/2 max-w-[85%] text-center pointer-events-none transition-all duration-200 ${isMobile ? (controlsVisible ? 'bottom-20' : 'bottom-6') : controlsVisible ? 'bottom-28' : 'bottom-14'}`}
-          >
-            <span className="inline-block text-white text-outline font-bold text-base md:text-lg lg:text-4xl px-3 py-1.5 rounded-md whitespace-pre-line">
-              {activeSubtitleText}
-            </span>
-          </div>
-        )}
+        <Subtitles
+          activeCue={activeSubtitleText}
+          cueOptions={{
+            fontSize: 'md',
+            avoidControlsOverlap: controlsVisible,
+          }}
+          isMobile={isMobile}
+        />
       </div>
 
-      {/* Control overlay */}
-      <div className={`absolute inset-0 z-50 flex flex-col justify-between ${controlsVisible ? 'visible' : 'hidden'}`}>
-        {/* Top bar controls */}
-        <div className="flex flex-row-reverse p-4">
-          <button
-            onClick={handleClose}
-            onMouseEnter={onControlsMouseEnter}
-            onMouseLeave={onControlsMouseLeave}
-            className="p-2 hover:text-zinc-400 flex items-center justify-center rounded-full cursor-pointer"
-          >
-            <X className="size-8" />
-          </button>
-        </div>
-
-        {/* Central controls */}
-        {isMobile && (
-          <div className="flex items-center justify-center gap-16 py-2 px-4">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                skipTime(-10);
-              }}
-              className="hover:text-zinc-400 cursor-pointer px-6"
-            >
-              <RotateCcw className="size-10" />
-            </button>
-
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                togglePlay();
-              }}
-              className="hover:text-zinc-400 cursor-pointer px-6"
-            >
-              {isPlaying ? <Pause className="size-12" /> : <Play className="size-12" />}
-            </button>
-
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                skipTime(10);
-              }}
-              className="hover:text-zinc-400 cursor-pointer px-6"
-            >
-              <RotateCw className="size-10" />
-            </button>
-          </div>
-        )}
-
-        {/* Bottom bar controls */}
-        <div
-          onClick={(e) => e.stopPropagation()}
-          onMouseEnter={onControlsMouseEnter}
-          onMouseLeave={onControlsMouseLeave}
-          className="relative flex flex-col p-4"
-        >
-          {/* Seekbar/Remaining duration */}
-          <div className="z-50 flex items-center gap-4">
-            <input
-              type="range"
-              min={0}
-              max={duration || 100}
-              value={currentTime}
-              onChange={(e) => {
-                const time = Number(e.target.value);
-                if (videoRef.current) {
-                  videoRef.current.currentTime = time;
-                }
-                setCurrentTime(time);
-              }}
-              className={`w-full accent-white rounded-lg cursor-pointer ${isMobile ? 'h-1' : 'h-1.5'}`}
-            />
-
-            <span className="text-sm">{formatRemainingTime(currentTime, duration)}</span>
-          </div>
-
-          <div
-            className={`z-50 flex items-center text-xs ${isMobile ? 'py-2 justify-center' : 'py-4 justify-between'}`}
-          >
-            {!isMobile && (
-              <>
-                <div className="flex items-center gap-4">
-                  <button onClick={togglePlay} className="hover:text-zinc-400 cursor-pointer">
-                    {isPlaying ? <Pause className="size-8" /> : <Play className="size-8" />}
-                  </button>
-
-                  <button onClick={() => skipTime(-10)} className="hover:text-zinc-400 cursor-pointer">
-                    <RotateCcw className="size-8" />
-                  </button>
-
-                  <button onClick={() => skipTime(10)} className="hover:text-zinc-400 cursor-pointer">
-                    <RotateCw className="size-8" />
-                  </button>
-
-                  <button onClick={toggleMute} className="hover:text-zinc-400 cursor-pointer">
-                    {isMuted ? <VolumeX className="size-8 text-red-200" /> : <Volume2 className="size-8" />}
-                  </button>
-                </div>
-
-                <span className="text-lg font-semibold truncate">{playable.title}</span>
-              </>
-            )}
-
-            <div className={`flex items-center ${isMobile ? 'gap-12' : 'gap-3'}`}>
-              {/* Audio and subtitle selector */}
-              <TrackOptions
-                isMobile={isMobile}
-                videoRef={videoRef}
-                audioTracks={audioTracks}
-                selectedAudio={selectedAudio}
-                onAudioChange={changeAudio}
-                subtitleTracks={playable.subtitle_tracks}
-                selectedSubtitle={selectedSubtitle}
-                onSubtitleChange={handleSubtitleChange}
-              />
-
-              {/* Fullscreen */}
-              {!isMobile && (
-                <button onClick={toggleFullscreen} className="hover:text-zinc-400 cursor-pointer">
-                  <Maximize className="size-8" />
-                </button>
-              )}
-            </div>
-          </div>
-
-          <div className="absolute inset-x-0 bottom-0 h-26 w-full bg-linear-to-t from-black via-black/60 to-transparent" />
-        </div>
-      </div>
+      {/*Control overlay */}
+      {!isIOS && !isVideoLoading && (
+        <PlayerControls
+          videoRef={videoRef}
+          isMobile={isMobile}
+          playable={playable}
+          controlsVisible={controlsVisible}
+          onControlsMouseEnter={onControlsMouseEnter}
+          onControlsMouseLeave={onControlsMouseLeave}
+          isPlaying={isPlaying}
+          isMuted={isMuted}
+          currentTime={currentTime}
+          duration={duration}
+          onClose={handleClose}
+          onTogglePlay={togglePlay}
+          onSkip={skipTime}
+          onToggleMute={toggleMute}
+          onToggleFullscreen={toggleFullscreen}
+          onSeek={handleSeek}
+          audioTracks={audioTracks}
+          selectedAudio={selectedAudio}
+          onAudioChange={changeAudio}
+          selectedSubtitle={selectedSubtitle}
+          onSubtitleChange={handleSubtitleChange}
+        />
+      )}
     </div>
   );
-}
-
-function formatRemainingTime(currentTimeInSeconds: number, durationInSeconds: number): string {
-  if (!Number.isFinite(currentTimeInSeconds) || currentTimeInSeconds <= 0) return '00:00';
-
-  const remainingTime = durationInSeconds - currentTimeInSeconds;
-
-  const mins = Math.floor(remainingTime / 60);
-  const secs = Math.floor(remainingTime % 60);
-
-  return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 }
