@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { useNavigate, Navigate } from 'react-router';
 import { useAuth } from '@/hooks/useAuth';
+import { Logo } from '@/components/Logo';
+import { Button } from '@/components/Button';
+import { Loading } from '@/components/Loading';
 import axios from 'axios';
 
 export function LoginPage() {
@@ -38,45 +41,38 @@ export function LoginPage() {
   if (user) return <Navigate to="/" replace />;
 
   return (
-    <div className="flex flex-col text-zinc-100 h-screen w-full p-8 sm:p-0">
+    <div className="flex flex-col bg-primary text-zinc-100 h-screen w-full p-8 sm:p-0">
       <form onSubmit={handleSubmit} className="flex flex-col m-auto gap-6 w-full sm:w-100">
-        <div className="uppercase flex items-center justify-center text-4xl sm:text-5xl">
-          <h1 className="font-bold tracking-tight text-zinc-100 mb-10">
-            Media<span className="text-red-400">Vault</span>
-          </h1>
+        <div className="flex flex-col items-center justify-center gap-4 mb-4">
+          <Logo className="text-4xl sm:text-5xl" />
+          <h2 className="text-muted text-base sm:text-lg">Acesse seu cofre de mídia.</h2>
         </div>
 
         <div className="flex flex-col items-start gap-2 w-full">
-          <label htmlFor="user">Usuário</label>
           <input
+            placeholder="Usuário"
             id="user"
             type="text"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            className="bg-zinc-900 border border-zinc-800 focus:border-red-400/50 focus:ring-1 focus:ring-red-400/50 rounded-lg px-4 py-1.5 text-sm text-zinc-200 placeholder-zinc-500 outline-none transition-all pr-8 h-10 w-full"
+            className="bg-zinc-900 border border-zinc-800 focus:border-accent/50 focus:ring-1 focus:ring-accent/50 rounded-lg text-sm text-zinc-200 placeholder-muted outline-none transition-all px-4 py-1.5 h-11 w-full"
           />
         </div>
 
         <div className="flex flex-col items-start gap-2 w-full">
-          <label htmlFor="token">Senha</label>
           <input
+            placeholder="Senha"
             id="token"
             type="password"
             value={token}
             onChange={(e) => setToken(e.target.value)}
-            className="bg-zinc-900 border border-zinc-800 focus:border-red-400/50 focus:ring-1 focus:ring-red-400/50 rounded-lg px-4 py-1.5 text-sm text-zinc-200 placeholder-zinc-500 outline-none transition-all pr-8 h-10 w-full"
+            className="bg-zinc-900 border border-zinc-800 focus:border-accent/50 focus:ring-1 focus:ring-accent/50 rounded-lg text-sm text-zinc-200 placeholder-muted outline-none transition-all px-4 py-1.5 h-11 w-full"
           />
         </div>
 
         {error && <p>{error}</p>}
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="flex items-center justify-center rounded-lg bg-secondary hover:bg-zinc-600 text-sm font-bold transition-colors cursor-pointer disabled:opacity-50 gap-2 mt-4 px-4 h-10"
-        >
-          {loading ? 'Entrando...' : 'Entrar'}
-        </button>
+        <Button text={loading ? <Loading /> : 'Entrar'} type="submit" disabled={loading} useAccentColor={true} />
       </form>
     </div>
   );
