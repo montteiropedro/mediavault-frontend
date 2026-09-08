@@ -63,6 +63,9 @@ code {
 @theme {
   --container-app: 2560px;
 
+  --color-accent: #ef4444;
+  --color-muted: #71717a;
+
   --color-primary: #09090b;
   --color-secondary: #262626;
 }
