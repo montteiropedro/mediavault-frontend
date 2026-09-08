@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { MediaCard } from '@/components/MediaCard';
 import { Header } from '@/components/Header';
 import { ShowCard } from '@/components/ShowCard';
+import { Loading } from '@/components/Loading';
 import { libraryService } from '@/services/api';
 import type { Library } from '@/types';
 
@@ -56,7 +57,7 @@ export function LibraryPage() {
   };
 
   return (
-    <div className="min-h-screen max-w-app bg-zinc-950 text-zinc-100 font-sans antialiased m-auto">
+    <div className="min-h-dvh w-full max-w-app bg-primary text-zinc-100 font-sans antialiased m-auto">
       <Header
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
@@ -80,7 +81,7 @@ export function LibraryPage() {
           </h2>
 
           {loading ? (
-            <div className="text-center py-20 text-zinc-500">Carregando mídias...</div>
+            <Loading size="lg" className="absolute inset-0" />
           ) : filteredLibrary.length === 0 && searchTerm ? (
             <div className="py-16 text-center bg-zinc-900/50 border border-zinc-800/80 rounded-xl">
               <p className="text-zinc-400 font-medium">Nenhuma mídia encontrada para "{searchTerm}"</p>
