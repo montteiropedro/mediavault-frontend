@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import Hls from 'hls.js';
 import type { Playable } from '@/types';
 import { useHlsAudioTracks } from './Tracks/useHlsAudioTracks';
+import { usePlatform } from './usePlatform';
 
 type UseHlsPlayerProps = {
   videoRef: React.RefObject<HTMLVideoElement | null>;
@@ -16,6 +17,7 @@ export const useHlsPlayer = ({ videoRef, playable }: UseHlsPlayerProps) => {
   const initialTime = playable.user_progress_seconds || 0;
 
   const { audioTracks, changeAudio, selectedAudio, attach } = useHlsAudioTracks();
+  const { isIOS } = usePlatform();
 
   useEffect(() => {
     const video = videoRef.current;
@@ -28,7 +30,13 @@ export const useHlsPlayer = ({ videoRef, playable }: UseHlsPlayerProps) => {
       hlsRef.current = null;
     }
 
-    if (Hls.isSupported()) {
+    const hasNativeHlsSupport = video.canPlayType('application/vnd.apple.mpegurl') !== '';
+    const shouldUseNativeHls = isIOS && hasNativeHlsSupport;
+
+    if (shouldUseNativeHls) {
+      video.src = src;
+      video.currentTime = initialTime;
+    } else if (Hls.isSupported()) {
       const hls = new Hls({
         startPosition: initialTime,
         maxBufferLength: 25,
@@ -36,6 +44,7 @@ export const useHlsPlayer = ({ videoRef, playable }: UseHlsPlayerProps) => {
         backBufferLength: 10,
         xhrSetup: (xhr) => {
           xhr.withCredentials = true;
+          xhr.setRequestHeader('ngrok-skip-browser-warning', 'true');
         },
       });
       hlsRef.current = hls;
@@ -67,8 +76,6 @@ export const useHlsPlayer = ({ videoRef, playable }: UseHlsPlayerProps) => {
         hls.destroy();
         hlsRef.current = null;
       };
-    } else if (video.canPlayType('application/vnd.apple.mpegurl') === 'probably') {
-      video.src = src;
     } else {
       console.error('Browser does not support HLS');
     }

@@ -61,7 +61,7 @@ export function TrackOptions({
         }}
         className="flex items-center gap-1"
       >
-        <Captions className={`duration-150 ${isMobile ? 'size-5' : 'size-8 group-hover:scale-150'}`} />
+        <Captions className={`duration-150 ${isMobile ? 'size-5' : 'size-10 group-hover:scale-115'}`} />
 
         {isMobile && <span>Áudio e Legenda</span>}
       </div>
