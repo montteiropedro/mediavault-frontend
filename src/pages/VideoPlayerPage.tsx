@@ -2,14 +2,14 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router';
 import { LoaderCircle } from 'lucide-react';
 import { VideoPlayer } from '@/components/VideoPlayer';
-import { useIsMobile } from '@/hooks/useIsMobile';
+import { usePlatform } from '@/hooks/usePlatform';
 import { libraryService } from '@/services/api';
 import type { Playable } from '@/types';
 
 export function VideoPlayerPage() {
   const { id, type } = useParams<{ id: string; type: 'movie' | 'episode' }>();
 
-  const isMobile = useIsMobile();
+  const { isMobile } = usePlatform();
 
   const [playable, setPlayable] = useState<Playable | null>(null);
   const [error, setError] = useState<string | null>(null);
