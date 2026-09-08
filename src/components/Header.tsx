@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { X, Settings } from 'lucide-react';
-import { useIsMobile } from '../hooks/useIsMobile';
+import { usePlatform } from '../hooks/usePlatform';
 import { useAuth } from '@/hooks/useAuth';
 
 interface HeaderProps {
@@ -13,7 +13,7 @@ interface HeaderProps {
 export function Header({ searchTerm, setSearchTerm, isScanning, handleLibraryScan }: HeaderProps) {
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const settingsRef = useRef<HTMLDivElement>(null);
-  const isMobile = useIsMobile();
+  const { isMobile } = usePlatform();
   const { user, logout } = useAuth();
 
   useEffect(() => {

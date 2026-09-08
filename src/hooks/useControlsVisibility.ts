@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
-import { useIsMobile } from './useIsMobile';
+import { usePlatform } from './usePlatform';
 
 interface UseControlsVisibilityOptionsProps {
   timeout?: number;
@@ -15,7 +15,7 @@ export function useControlsVisibility(
   const isHoveringControlsRef = useRef<boolean>(false);
   const isPlayingRef = useRef<boolean>(false);
 
-  const isMobile = useIsMobile();
+  const { isMobile } = usePlatform();
 
   const clearHideTimer = () => {
     if (timerRef.current) clearTimeout(timerRef.current);
