@@ -9,7 +9,7 @@ import { useHlsSubtitleTrack } from '@/hooks/Tracks/useHlsSubtitleTracks';
 import { useVideoPlayerShortcuts } from '@/hooks/useVideoPlayerShortcuts';
 import { PlayerControls } from '@/components/Player/PlayerControls';
 import { Loading } from '@/components/Loading';
-import { Subtitles } from '@/components/Player/subtitles';
+import { Subtitles } from '@/components/Player/Subtitles';
 import type { Playable } from '@/types';
 
 interface VideoPlayerProps {
