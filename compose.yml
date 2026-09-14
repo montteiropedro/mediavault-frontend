@@ -1,8 +1,15 @@
 services:
-  app:
+  frontend:
     container_name: mediavault-frontend
     build: .
     ports:
       - '${PORT:-5173}:5173'
     volumes:
       - .:/app
+    networks:
+      - default
+      - mediavault
+
+networks:
+  mediavault:
+    external: true
