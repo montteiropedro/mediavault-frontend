@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { X, Settings } from 'lucide-react';
 import { usePlatform } from '../hooks/usePlatform';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/auth/useAuth';
 
 interface HeaderProps {
   searchTerm: string;

@@ -1,6 +1,6 @@
 import { Routes, Route } from 'react-router';
 import { Navigate, Outlet } from 'react-router';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/auth/useAuth';
 import { LibraryPage } from '@/pages/LibraryPage';
 import { VideoPlayerPage } from '@/pages/VideoPlayerPage';
 import { LoginPage } from './pages/LoginPage';
