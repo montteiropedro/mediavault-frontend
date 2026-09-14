@@ -82,6 +82,10 @@ code {
 
   --color-primary: #09090b;
   --color-secondary: #262626;
+
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
 }
 
 @layer utilities {

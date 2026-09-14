@@ -1,16 +1,17 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { MediaCard } from '@/components/MediaCard';
-import { Header } from '@/components/Header';
 import { ShowCard } from '@/components/ShowCard';
 import { Loading } from '@/components/Loading';
 import { libraryService } from '@/services/api';
+import { useLibraryScan } from '@/contexts/libraryScan/useLibraryScan';
+import { useSearch } from '@/contexts/search/useSearch';
 import type { Library } from '@/types';
 
 export function LibraryPage() {
   const [library, setLibrary] = useState<Library>({ movies: [], shows: [] });
-  const [loading, setLoading] = useState(true);
-  const [isScanning, setIsScanning] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const { searchTerm, setSearchTerm } = useSearch();
 
   const filteredLibrary = [
     ...library.movies.filter((movie) => movie.title.toLowerCase().includes(searchTerm.toLowerCase())),
@@ -32,6 +33,7 @@ export function LibraryPage() {
   useEffect(() => {
     async function loadInitialData() {
       try {
+        setLoading(true);
         const data = await libraryService.getAll();
         setLibrary(data);
       } catch (error) {
@@ -44,30 +46,26 @@ export function LibraryPage() {
     loadInitialData();
   }, []);
 
-  const handleLibraryScan = async () => {
-    try {
-      setIsScanning(true);
-      await libraryService.triggerScan();
-      await fetchLibrary();
-    } catch (error) {
-      console.error('Error scanning library:', error);
-    } finally {
-      setIsScanning(false);
+  const { scanJobProgress, scanJobId } = useLibraryScan();
+  const lastFetchedJobId = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!scanJobId || lastFetchedJobId.current === scanJobId) return;
+
+    if (scanJobProgress?.status === 'completed') {
+      lastFetchedJobId.current = scanJobId;
+      fetchLibrary();
     }
-  };
+
+    if (scanJobProgress?.status === 'failed') {
+      lastFetchedJobId.current = scanJobId;
+      console.error('Library scan failed:', scanJobProgress);
+    }
+  }, [scanJobId, scanJobProgress]);
 
   return (
     <div className="min-h-dvh w-full max-w-app bg-primary text-zinc-100 font-sans antialiased m-auto">
-      <Header
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        isScanning={isScanning}
-        handleLibraryScan={handleLibraryScan}
-      />
-
-      {/* Main */}
       <main className="flex flex-col gap-10 py-8 px-4 sm:px-16">
-        {/* Section: Complete collection (or filtered by search) */}
         <section className="flex flex-col gap-6">
           <h2 className="text-xl font-bold tracking-tight text-zinc-100">
             <div className="flex items-center gap-2">
@@ -93,7 +91,7 @@ export function LibraryPage() {
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-y-6 gap-x-2 lg:gap-x-4">
+            <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-y-6 gap-x-2 lg:gap-x-4">
               {filteredLibrary.map((item) =>
                 item.type === 'movie' ? (
                   <MediaCard key={`movie_${item.id}`} playable={item} />
