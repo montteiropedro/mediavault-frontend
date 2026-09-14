@@ -20,6 +20,20 @@ export default defineConfig(({ mode }) => {
       allowedHosts,
       host: '0.0.0.0',
       port: Number(env.PORT) || 5173,
+      proxy: {
+        '/api': {
+          target: 'http://backend:3000',
+          changeOrigin: true,
+        },
+        '/rails': {
+          target: 'http://backend:3000',
+          changeOrigin: true,
+        },
+        '/sidekiq': {
+          target: 'http://backend:3000',
+          changeOrigin: true,
+        },
+      },
       watch: {
         usePolling: true,
       },
