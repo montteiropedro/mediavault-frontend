@@ -20,9 +20,7 @@ export function Header() {
       <div
         className={`uppercase flex gap-2 sm:gap-3 ${isDesktop ? 'text-base sm:text-lg md:text-xl lg:text-2xl' : 'text-xl justify-center w-full'}`}
       >
-        <h1 className="font-bold tracking-tight text-zinc-100">
-          <Logo />
-        </h1>
+        <Logo />
       </div>
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
