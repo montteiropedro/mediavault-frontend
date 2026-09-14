@@ -7,6 +7,8 @@ import path from 'path';
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
 
+  const allowedHosts = env.ALLOWED_HOSTS ? env.ALLOWED_HOSTS.split(',').map((host) => host.trim()) : [];
+
   return {
     plugins: [react(), tailwindcss()],
     resolve: {
@@ -15,7 +17,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     server: {
-      allowedHosts: ['.local'],
+      allowedHosts,
       host: '0.0.0.0',
       port: Number(env.PORT) || 5173,
       watch: {
