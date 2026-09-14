@@ -26,7 +26,7 @@ export const libraryService = {
     return response.data;
   },
 
-  triggerScan: async (): Promise<{ message: string }> => {
+  triggerScan: async (): Promise<{ job_id: string }> => {
     const response = await api.get('/api/v1/library/scan');
     return response.data;
   },
