@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Navigate } from 'react-router';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/auth/useAuth';
 import { Logo } from '@/components/Logo';
 import { Button } from '@/components/Button';
 import { Loading } from '@/components/Loading';
