@@ -79,7 +79,6 @@ export const useHlsPlayer = ({ videoRef, playable }: UseHlsPlayerProps) => {
         backBufferLength: 30,
         xhrSetup: (xhr) => {
           xhr.withCredentials = true;
-          xhr.setRequestHeader('ngrok-skip-browser-warning', 'true');
         },
       });
       hlsRef.current = hls;
