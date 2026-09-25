@@ -74,6 +74,37 @@ code {
   padding-right: var(--safe-right);
 }
 
+input[type='range'].video-player-seekbar {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  outline: none;
+}
+
+input[type='range'].video-player-seekbar::-webkit-slider-runnable-track {
+  background: transparent;
+}
+input[type='range'].video-player-seekbar::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: white;
+  cursor: pointer;
+}
+
+input[type='range'].video-player-seekbar::-moz-range-track {
+  background: transparent;
+}
+input[type='range'].video-player-seekbar::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: white;
+  border: none;
+  cursor: pointer;
+}
+
 @theme {
   --container-app: 2560px;
 
