@@ -39,9 +39,10 @@ export const useHlsPlayer = ({ videoRef, playable }: UseHlsPlayerProps) => {
     } else if (Hls.isSupported()) {
       const hls = new Hls({
         startPosition: initialTime,
-        maxBufferLength: 25,
-        maxMaxBufferLength: 30,
-        backBufferLength: 10,
+        maxBufferLength: 60,
+        maxMaxBufferLength: 300,
+        maxBufferSize: 120 * 1000 * 1000,
+        backBufferLength: 30,
         xhrSetup: (xhr) => {
           xhr.withCredentials = true;
           xhr.setRequestHeader('ngrok-skip-browser-warning', 'true');
