@@ -113,7 +113,7 @@ export const useHlsPlayer = ({ videoRef, playable }: UseHlsPlayerProps) => {
     } else {
       console.error('Browser does not support HLS');
     }
-  }, [src, videoRef, initialTime, attach]);
+  }, [src, videoRef, initialTime, attach, isIOS]);
 
   return { isVideoLoading, setIsVideoLoading, audioTracks, changeAudio, selectedAudio, bufferedPercent };
 };
