@@ -38,7 +38,7 @@ export function VideoPlayer({ playable }: VideoPlayerProps) {
   // HLS setup //
   //===========//
 
-  const { isVideoLoading, setIsVideoLoading, audioTracks, selectedAudio, changeAudio } = useHlsPlayer({
+  const { isVideoLoading, setIsVideoLoading, audioTracks, selectedAudio, changeAudio, bufferedPercent } = useHlsPlayer({
     videoRef,
     playable,
   });
@@ -225,6 +225,7 @@ export function VideoPlayer({ playable }: VideoPlayerProps) {
           onAudioChange={changeAudio}
           selectedSubtitle={selectedSubtitle}
           onSubtitleChange={handleSubtitleChange}
+          bufferedPercent={bufferedPercent}
         />
       )}
     </div>

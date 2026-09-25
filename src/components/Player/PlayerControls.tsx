@@ -22,6 +22,7 @@ type PlayerControlsProps = {
   onToggleMute: () => void;
   onToggleFullscreen: () => void;
   onSeek: (time: number) => void;
+  bufferedPercent: number;
 } & Pick<
   TrackOptionsProps,
   'audioTracks' | 'selectedAudio' | 'onAudioChange' | 'selectedSubtitle' | 'onSubtitleChange'
@@ -49,6 +50,7 @@ export function PlayerControls({
   onAudioChange,
   selectedSubtitle,
   onSubtitleChange,
+  bufferedPercent,
 }: PlayerControlsProps) {
   return (
     <div className={`absolute inset-0 flex flex-col justify-between ${controlsVisible ? 'visible' : 'hidden'}`}>
@@ -110,14 +112,31 @@ export function PlayerControls({
         className="flex flex-col px-4"
       >
         {/* Seekbar/Remaining duration */}
-        <input
-          type="range"
-          min={0}
-          max={duration || 100}
-          value={currentTime}
-          onChange={(e) => onSeek(Number(e.target.value))}
-          className={`z-10 w-full accent-white rounded-lg cursor-pointer ${isMobile ? 'h-0.5' : 'h-1'}`}
-        />
+        <div className="relative w-full flex items-center">
+          {/* Track background (unfilled) */}
+          <div className={`absolute w-full rounded-lg bg-white/20 pointer-events-none ${isMobile ? 'h-0.5' : 'h-1'}`} />
+
+          {/* Buffered range */}
+          <div
+            className={`absolute rounded-lg bg-white/40 transition-[width] duration-150 pointer-events-none ${isMobile ? 'h-0.5' : 'h-1'}`}
+            style={{ width: `${bufferedPercent}%` }}
+          />
+
+          {/* Played range */}
+          <div
+            className={`absolute rounded-lg bg-zinc-100 pointer-events-none ${isMobile ? 'h-0.5' : 'h-1'}`}
+            style={{ width: `${(currentTime / (duration || 1)) * 100}%` }}
+          />
+
+          <input
+            type="range"
+            min={0}
+            max={duration || 100}
+            value={currentTime}
+            onChange={(e) => onSeek(Number(e.target.value))}
+            className={`z-10 w-full appearance-none bg-transparent cursor-pointer video-player-seekbar ${isMobile ? 'h-0.5' : 'h-1'}`}
+          />
+        </div>
 
         <div className={`z-10 flex items-center justify-between text-xs ${isMobile ? 'py-5' : 'py-6'}`}>
           <div className="flex gap-10">
