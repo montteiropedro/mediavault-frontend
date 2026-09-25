@@ -12,12 +12,46 @@ type UseHlsPlayerProps = {
 export const useHlsPlayer = ({ videoRef, playable }: UseHlsPlayerProps) => {
   const hlsRef = useRef<Hls | null>(null);
   const [isVideoLoading, setIsVideoLoading] = useState(true);
+  const [bufferedPercent, setBufferedPercent] = useState(0);
 
   const src = `${playable.hls_url}`;
   const initialTime = playable.user_progress_seconds || 0;
 
   const { audioTracks, changeAudio, selectedAudio, attach } = useHlsAudioTracks();
   const { isIOS } = usePlatform();
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    setBufferedPercent(0);
+
+    const updateBuffered = () => {
+      const { buffered, currentTime, duration } = video;
+      if (!duration) return;
+
+      let bufferedEnd = 0;
+      for (let i = 0; i < buffered.length; i++) {
+        if (buffered.start(i) <= currentTime) {
+          bufferedEnd = Math.max(bufferedEnd, buffered.end(i));
+        }
+      }
+
+      setBufferedPercent((bufferedEnd / duration) * 100);
+    };
+
+    video.addEventListener('progress', updateBuffered);
+    video.addEventListener('timeupdate', updateBuffered);
+    video.addEventListener('seeked', updateBuffered);
+    video.addEventListener('loadeddata', updateBuffered);
+
+    return () => {
+      video.removeEventListener('progress', updateBuffered);
+      video.removeEventListener('timeupdate', updateBuffered);
+      video.removeEventListener('seeked', updateBuffered);
+      video.removeEventListener('loadeddata', updateBuffered);
+    };
+  }, [videoRef, src]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -82,5 +116,5 @@ export const useHlsPlayer = ({ videoRef, playable }: UseHlsPlayerProps) => {
     }
   }, [src, videoRef, initialTime, attach]);
 
-  return { isVideoLoading, setIsVideoLoading, audioTracks, changeAudio, selectedAudio };
+  return { isVideoLoading, setIsVideoLoading, audioTracks, changeAudio, selectedAudio, bufferedPercent };
 };
