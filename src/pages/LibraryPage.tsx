@@ -108,7 +108,7 @@ export function LibraryPage() {
       </section>
 
       {loading ? (
-        <Loading size="lg" className="absolute inset-0" />
+        <Loading size="lg" className="min-h-24" />
       ) : searchTerm ? (
         <section className="space-y-5">
           <div className="flex items-center gap-3">
