@@ -26,7 +26,7 @@ export function Loading({ size, className }: LoadingProps) {
 
   return (
     <div className={['flex items-center justify-center bg-transparent', className].join(' ')}>
-      <LoaderCircle className={['animate-spin', getSizeDynamicStyles()].join(' ')} />
+      <LoaderCircle className={['animate-spin text-accent', getSizeDynamicStyles()].join(' ')} />
     </div>
   );
 }

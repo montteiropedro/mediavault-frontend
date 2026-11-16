@@ -41,7 +41,7 @@ export function VideoPlayerPage() {
   if (!playable && !error) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20">
-        <LoaderCircle size={isMobile ? 48 : 82} className="animate-spin" />
+        <LoaderCircle size={isMobile ? 48 : 82} className="animate-spin text-accent" />
       </div>
     );
   }
