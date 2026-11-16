@@ -1,13 +1,13 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router';
-import { AuthContext, type IUser } from './AuthContext';
+import { AuthContext, type User } from './AuthContext';
 import { Loading } from '@/components/Loading';
 import { api } from '@/services/api';
 
 type AuthProviderProps = { children: ReactNode };
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const [user, setUser] = useState<IUser | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const navigate = useNavigate();
 

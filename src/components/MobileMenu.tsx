@@ -26,7 +26,7 @@ export function MobileMenu() {
   }, []);
 
   return (
-    <div className="z-50 rounded-full fixed bottom-5 left-1/2 -translate-x-1/2 bg-secondary/80 backdrop-blur-md border border-white/5 text-zinc-100 flex items-center gap-1 h-16 w-max p-1">
+    <div className="z-60 rounded-full fixed bottom-5 left-1/2 -translate-x-1/2 bg-secondary/80 backdrop-blur-md border border-white/5 text-zinc-100 flex items-center gap-1 h-16 w-max p-1">
       <button
         onClick={() => navigate('/')}
         className={twJoin(

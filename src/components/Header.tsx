@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { X, Settings } from 'lucide-react';
+import { X, Settings, Search } from 'lucide-react';
 import { usePlatform } from '../hooks/usePlatform';
 import { useAuth } from '@/contexts/auth/useAuth';
 import { ProgressBar } from '@/components/ProgressBar';
@@ -16,30 +16,31 @@ export function Header() {
   const { searchTerm, setSearchTerm } = useSearch();
 
   return (
-    <header className="sticky top-0 z-10 transition-all duration-300 bg-primary flex items-center justify-between gap-4 py-4 px-4 sm:px-16">
+    <header className="sticky top-0 z-40 flex items-center justify-between gap-4 border-b border-white/[0.06] bg-zinc-950/90 px-5 py-3 backdrop-blur-xl transition-all duration-300 sm:px-10 lg:px-14">
       <div
-        className={`uppercase flex gap-2 sm:gap-3 ${isDesktop ? 'text-base sm:text-lg md:text-xl lg:text-2xl' : 'text-xl justify-center w-full'}`}
+        className={`uppercase flex gap-2 sm:gap-3 ${isDesktop ? 'text-base sm:text-lg md:text-xl' : 'text-xl justify-center w-full'}`}
       >
         <Logo />
       </div>
 
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex items-center justify-end gap-3">
         {isDesktop && (
           <div className="flex gap-4">
-            <div className="relative w-full sm:w-72">
+            <div className="relative w-full sm:w-72 lg:w-80">
+              <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500" />
               <input
                 type="text"
                 placeholder="Buscar por título..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="bg-zinc-900 border border-zinc-800 focus:border-red-400/50 focus:ring-1 focus:ring-red-400/50 rounded-lg px-4 py-1.5 text-sm text-zinc-200 placeholder-zinc-500 outline-none transition-all pr-8 h-10 w-full"
+                className="h-10 w-full rounded-full border border-white/[0.08] bg-white/[0.04] py-1.5 pl-10 pr-9 text-sm text-zinc-200 outline-none transition-all placeholder:text-zinc-500 focus:border-red-400/50 focus:bg-white/[0.07] focus:ring-1 focus:ring-red-400/30"
               />
 
               {searchTerm && (
                 <button
                   onClick={() => setSearchTerm('')}
                   aria-label="Limpar busca"
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 text-xs cursor-pointer"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-zinc-500 transition hover:text-zinc-200"
                 >
                   <X size={16} />
                 </button>
@@ -52,17 +53,18 @@ export function Header() {
           <div
             ref={settingsRef}
             onBlur={() => setIsSettingsOpen(false)}
-            className="relative flex items-centert text-zinc-100 rounded-lg cursor-pointer gap-4 h-10"
+            className="relative flex h-10 cursor-pointer items-center gap-4 rounded-lg text-zinc-100"
           >
             <div
               onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-              className={`group hover:bg-secondary rounded-lg size-10 flex items-center justify-center ${isSettingsOpen && 'bg-secondary'}`}
+              aria-label="Abrir configurações"
+              className={`group flex size-10 items-center justify-center rounded-full transition hover:bg-white/[0.08] ${isSettingsOpen ? 'bg-white/[0.08]' : ''}`}
             >
               <Settings size={20} className="group-hover:rotate-90 transition duration-150" />
             </div>
 
             {isSettingsOpen && (
-              <ul className="absolute right-0 top-14 bg-secondary rounded-lg w-max p-2">
+              <ul className="absolute right-0 top-12 w-max rounded-xl border border-white/10 bg-zinc-900 p-2 shadow-2xl shadow-black/50">
                 <li>
                   <button
                     onClick={handleLibraryScan}
