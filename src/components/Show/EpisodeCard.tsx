@@ -1,64 +1,73 @@
-import { useRef } from 'react';
+import { Film, Play } from 'lucide-react';
 import { useNavigate } from 'react-router';
-import { Film } from 'lucide-react';
 import type { Episode } from '@/types';
 
 type EpisodeCardProps = {
   episode: Episode;
 };
 
+function formatDuration(seconds: number) {
+  const totalMinutes = Math.floor(seconds / 60);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return hours > 0 ? `${hours}h ${minutes.toString().padStart(2, '0')}min` : `${totalMinutes} min`;
+}
+
 export function EpisodeCard({ episode }: EpisodeCardProps) {
-  const cardRef = useRef<HTMLDivElement>(null);
   const { number, title, duration_seconds, user_progress_seconds, thumbnail_url } = episode;
-
-  const progressSeconds = user_progress_seconds || 0;
-  const progressPercent = duration_seconds > 0 ? Math.min((progressSeconds / duration_seconds) * 100, 100) : 0;
-
+  const progressPercent = duration_seconds > 0 ? Math.min((user_progress_seconds / duration_seconds) * 100, 100) : 0;
+  const isCompleted = progressPercent >= 95;
   const navigate = useNavigate();
+  const episodeLabel = `Episódio ${number}`;
+  const hasEpisodeTitle = title.trim() && title.toLocaleLowerCase() !== episodeLabel.toLocaleLowerCase();
+
+  const playEpisode = () => navigate(`/player/${episode.type}/${episode.id}`);
 
   return (
-    <div
-      ref={cardRef}
-      onClick={() => navigate(`/player/${episode.type}/${episode.id}`)}
-      className="group z-0 hover:z-30 relative cursor-pointer flex rounded-lg"
+    <article
+      role="button"
+      tabIndex={0}
+      aria-label={`Reproduzir ${episodeLabel}${hasEpisodeTitle ? `: ${title}` : ''}`}
+      onClick={playEpisode}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          playEpisode();
+        }
+      }}
+      className="group flex cursor-pointer items-center gap-3 rounded-xl border border-white/[0.06] bg-zinc-900/60 p-2 text-left transition-colors hover:border-white/[0.12] hover:bg-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 sm:flex-col sm:items-stretch sm:gap-3 sm:p-3"
     >
-      <div className="z-20 group relative flex lg:flex-col items-center gap-4 cursor-pointer w-full">
-        {/* Cover container */}
-        <div className="aspect-video w-40 sm:w-50 lg:w-full bg-zinc-900 overflow-hidden border border-zinc-800 group-hover:border-zinc-700 transition-all shadow-lg rounded-lg">
-          {thumbnail_url ? (
-            <div className="relative size-full">
-              <img src={thumbnail_url} alt={title} className="w-full h-full object-cover" />
-
-              <div className="sm:hidden absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 z-50 size-10 sm:size-14 rounded-full border-2 border-zinc-100 text-zinc-100 flex items-center justify-center shadow-2xl drop-shadow-lg">
-                <svg className="w-8 h-8 fill-current ml-0.5" viewBox="0 0 24 24">
-                  <path d="M8 5v14l11-7z" />
-                </svg>
-              </div>
-            </div>
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-zinc-700 font-bold text-xs">
-              <Film size={32} />
-            </div>
-          )}
-        </div>
-
-        <div className="flex flex-col lg:flex-row items-start lg:items-center gap-4 lg:gap-0 justify-between flex-1 lg:w-full">
-          <h3 className="font-bold text-lg lg:text-base text-left">Episódio {number}</h3>
-
-          {/* Progress Bar */}
-          <div className="bg-secondary lg:group-hover:bg-black overflow-hidden rounded-full h-1 w-[80%] lg:w-[40%]">
-            <div className="h-full transition-all duration-300 bg-red-400" style={{ width: `${progressPercent}%` }} />
+      <div className="relative aspect-video w-[38%] min-w-[116px] max-w-[190px] shrink-0 overflow-hidden rounded-lg border border-white/[0.06] bg-zinc-800 sm:w-full sm:max-w-none">
+        {thumbnail_url ? (
+          <img src={thumbnail_url} alt="" loading="lazy" className="h-full w-full object-cover" />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-zinc-800 to-red-950/50 text-zinc-500">
+            <Film size={26} />
           </div>
+        )}
+        <div className="absolute inset-0 flex items-center justify-center bg-black/25 opacity-100 transition-opacity sm:bg-black/40 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-visible:opacity-100">
+          <span className="flex size-9 items-center justify-center rounded-full border border-white/60 bg-black/35 text-white backdrop-blur-sm sm:size-12">
+            <Play size={18} fill="currentColor" className="ml-0.5 sm:size-5" />
+          </span>
         </div>
-
-        <div className="hidden sm:flex lg:hidden size-10 sm:size-14 rounded-full bg-zinc-100 text-secondary items-center justify-center shadow-2xl drop-shadow-lg">
-          <svg className="w-8 h-8 fill-current ml-0.5" viewBox="0 0 24 24">
-            <path d="M8 5v14l11-7z" />
-          </svg>
-        </div>
+        {duration_seconds > 0 && <span className="absolute bottom-1.5 right-1.5 rounded bg-black/75 px-1.5 py-0.5 text-[10px] font-medium text-white">{formatDuration(duration_seconds)}</span>}
       </div>
 
-      <div className="lg:block hidden absolute group-hover:z-10 left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 group-hover:bg-secondary size-full rounded-lg group-hover:scale-y-[1.10] group-hover:scale-x-[1.05]" />
-    </div>
+      <div className="flex min-w-0 flex-1 flex-col justify-center gap-2 sm:gap-2.5">
+        <div className="min-w-0">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-red-400">Episódio {number}</p>
+          {hasEpisodeTitle && <h3 className="mt-1 line-clamp-2 text-sm font-semibold leading-snug text-zinc-100">{title}</h3>}
+        </div>
+        <div>
+          <div className="mb-1.5 flex items-center justify-between gap-2 text-[10px] text-zinc-500">
+            <span>{isCompleted ? 'Concluído' : progressPercent > 0 ? `${Math.round(progressPercent)}% assistido` : 'Não iniciado'}</span>
+            {progressPercent > 0 && !isCompleted && <span>Continuar</span>}
+          </div>
+          <div className="h-1 overflow-hidden rounded-full bg-white/10">
+            <div className="h-full rounded-full bg-red-500" style={{ width: `${progressPercent}%` }} />
+          </div>
+        </div>
+      </div>
+    </article>
   );
 }

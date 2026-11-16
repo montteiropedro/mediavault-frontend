@@ -9,43 +9,45 @@ interface SeasonListProps {
 }
 
 export function SeasonList({ seasons, currentSeason, setCurrentSeasonId }: SeasonListProps) {
-  const [showSeasonsList, setShowSeasonsList] = useState<boolean>(false);
+  const [showSeasonsList, setShowSeasonsList] = useState(false);
 
-  const handleSelectSeason = (seasonId: string) => {
-    setCurrentSeasonId(seasonId);
-    setShowSeasonsList(false);
+  const handleBlur = (event: React.FocusEvent<HTMLDivElement>) => {
+    if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setShowSeasonsList(false);
   };
 
   return (
-    <div onBlur={() => setShowSeasonsList(false)} className="relative z-40 drop-shadow-sm drop-shadow-black rounded-lg">
+    <div onBlur={handleBlur} className="relative z-20">
       <button
-        onClick={() => setShowSeasonsList(!showSeasonsList)}
-        className={`cursor-pointer bg-secondary border-zinc-600 font-bold flex items-center gap-4 h-11 px-4 rounded-lg ${showSeasonsList ? 'border-x border-t rounded-b-none' : 'border'}`}
+        type="button"
+        aria-haspopup="listbox"
+        aria-expanded={showSeasonsList}
+        onClick={() => setShowSeasonsList((open) => !open)}
+        className="flex h-10 cursor-pointer items-center gap-3 rounded-full border border-white/10 bg-white/[0.05] px-4 text-sm font-medium text-zinc-100 transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
       >
         <span>Temporada {currentSeason.number}</span>
-        <ChevronDown size={16} className={`transition duration-300 ${showSeasonsList && 'rotate-180'}`} />
+        <ChevronDown size={16} className={`text-zinc-400 transition-transform duration-200 ${showSeasonsList ? 'rotate-180' : ''}`} />
       </button>
 
       {showSeasonsList && (
-        <div
-          className={`absolute right-0 cursor-pointer border-zinc-600 bg-secondary w-full rounded-b-lg ${showSeasonsList ? 'border-x border-b' : 'border'}`}
-        >
-          <div className="bg-secondary flex items-center justify-center py-1">
-            <div className="bg-zinc-600 w-[80%] h-px rounded-full" />
-          </div>
-
-          {seasons.map(({ id, number }) => (
-            <div
-              key={id}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                handleSelectSeason(id);
-              }}
-              className={`hover:bg-zinc-400/20 flex items-center gap-2 h-11 px-4 last:rounded-b-lg ${id === currentSeason.id && 'bg-zinc-400/20'}`}
-            >
-              <span className="font-bold">Temporada {number}</span>
-            </div>
-          ))}
+        <div role="listbox" aria-label="Selecionar temporada" className="absolute right-0 top-full mt-2 max-h-64 min-w-full overflow-y-auto rounded-xl border border-white/10 bg-zinc-900 p-1.5 shadow-2xl shadow-black/60">
+          {seasons.map(({ id, number }) => {
+            const isSelected = id === currentSeason.id;
+            return (
+              <button
+                key={id}
+                type="button"
+                role="option"
+                aria-selected={isSelected}
+                onClick={() => {
+                  setCurrentSeasonId(id);
+                  setShowSeasonsList(false);
+                }}
+                className={`flex h-10 w-full cursor-pointer items-center rounded-lg px-3 text-left text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 ${isSelected ? 'bg-red-500/15 text-red-300' : 'text-zinc-300 hover:bg-white/[0.07] hover:text-white'}`}
+              >
+                Temporada {number}
+              </button>
+            );
+          })}
         </div>
       )}
     </div>

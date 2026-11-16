@@ -1,3 +1,4 @@
+import { Film } from 'lucide-react';
 import { EpisodeCard } from './EpisodeCard';
 import type { Episode } from '@/types';
 
@@ -6,16 +7,19 @@ interface EpisodeGridProps {
 }
 
 export function EpisodeGrid({ episodes }: EpisodeGridProps) {
+  if (episodes.length === 0) {
+    return (
+      <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 py-16 text-center text-zinc-500">
+        <Film size={32} className="text-zinc-600" />
+        <p className="text-sm">Não há episódios nesta temporada.</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="overflow-y-auto pt-4 pb-10 pl-4 md:pl-8 pr-3 md:pr-6 mr-1 custom-scrollbar">
-      <div
-        className={[
-          'grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-y-6 lg:gap-y-12 lg:gap-x-6',
-        ].join(' ')}
-      >
-        {episodes.map((episode: Episode) => (
-          <EpisodeCard key={episode.id} episode={episode} />
-        ))}
+    <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-24 pt-4 custom-scrollbar sm:px-7 sm:pb-8 sm:pt-6">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-5 xl:grid-cols-3 2xl:grid-cols-4">
+        {episodes.map((episode) => <EpisodeCard key={episode.id} episode={episode} />)}
       </div>
     </div>
   );
