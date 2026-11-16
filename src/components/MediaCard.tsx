@@ -1,7 +1,5 @@
-import { useRef } from 'react';
 import { useNavigate } from 'react-router';
-import { Film } from 'lucide-react';
-import { useCardEffect } from '@/hooks/useCardEffect';
+import { Film, Play } from 'lucide-react';
 import type { Movie } from '@/types';
 
 interface MediaCardProps {
@@ -9,62 +7,64 @@ interface MediaCardProps {
 }
 
 export function MediaCard({ playable }: MediaCardProps) {
-  const cardRef = useRef<HTMLDivElement>(null);
-  const { title, duration_seconds, user_progress_seconds } = playable;
-  const cover_art_url = 'cover_art_url' in playable ? playable.cover_art_url : null;
-
-  const progressSeconds = user_progress_seconds || 0;
-  const progressPercent = duration_seconds > 0 ? Math.min((progressSeconds / duration_seconds) * 100, 100) : 0;
+  const { title, duration_seconds, user_progress_seconds, cover_art_url } = playable;
+  const progressPercent = duration_seconds > 0 ? Math.min((user_progress_seconds / duration_seconds) * 100, 100) : 0;
   const isCompleted = progressPercent >= 95;
-
   const navigate = useNavigate();
 
-  const { handleMouseMove, handleMouseLeave } = useCardEffect({ cardRef });
-
-  if (!playable.hls_url) return;
+  if (!playable.hls_url) return null;
 
   return (
-    <div
-      ref={cardRef}
+    <article
       onClick={() => navigate(`/player/${playable.type}/${playable.id}`)}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      className="group relative cursor-pointer select-none flex flex-col"
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') navigate(`/player/${playable.type}/${playable.id}`);
+      }}
+      role="button"
+      tabIndex={0}
+      aria-label={`Assistir ${title}`}
+      className="group min-w-0 cursor-pointer select-none text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-4 focus-visible:ring-offset-zinc-950"
     >
-      <div className="group relative flex flex-col cursor-pointer select-none">
-        {/* Cover container */}
-        <div className="relative aspect-2/3 w-full rounded-lg bg-zinc-900 overflow-hidden border border-zinc-800 group-hover:border-zinc-700 transition-all shadow-xl group-hover:shadow-red-950/20">
-          {cover_art_url ? (
-            <img src={cover_art_url} alt={title} className="w-full h-full object-cover" />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-zinc-700 font-bold text-xs">
-              <Film size={32} />
-            </div>
-          )}
-
-          {!cover_art_url && (
-            <h3 className="absolute bottom-1 sm:bottom-2 px-2 py-0.5 font-medium text-zinc-300 group-hover:text-red-400 group-hover:z-50 backdrop-blur-md w-full text-[10px] sm:text-sm">
-              {title}
-            </h3>
-          )}
-
-          {/* Play Icon Hover Overlay */}
-          <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-            <div className="size-16 absolute -top-2 -right-2 rounded-bl-4xl bg-red-400 text-white flex items-center justify-center shadow-2xl drop-shadow-lg">
-              <svg className="w-8 h-8 fill-current ml-0.5" viewBox="0 0 24 24">
-                <path d="M8 5v14l11-7z" />
-              </svg>
-            </div>
+      <div className="relative aspect-2/3 overflow-hidden rounded-xl border border-white/8 bg-zinc-900 shadow-lg shadow-black/20 transition duration-300 group-hover:border-white/20 group-hover:shadow-xl group-hover:shadow-black/40">
+        {cover_art_url ? (
+          <img
+            src={cover_art_url}
+            alt={title}
+            loading="lazy"
+            className="h-full w-full object-cover transition duration-500"
+          />
+        ) : (
+          <div className="absolute inset-0 flex flex-col items-center justify-center overflow-hidden bg-linear-to-br from-zinc-800 via-zinc-900 to-red-950/60 p-4 text-center">
+            <div className="absolute -right-10 -top-10 size-36 rounded-full bg-red-500/10 blur-3xl" />
+            <Film size={28} className="relative mb-4 text-red-400/70" />
+            <span className="relative line-clamp-4 text-sm font-semibold leading-snug text-zinc-200">{title}</span>
+            <span className="relative mt-2 text-[10px] font-medium uppercase tracking-[0.2em] text-zinc-500">
+              Filme
+            </span>
           </div>
+        )}
+        <div className="absolute inset-0 flex items-center justify-center bg-black/45 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100">
+          <span className="flex size-12 items-center justify-center rounded-full bg-red-500 text-white shadow-lg shadow-red-950/50">
+            <Play size={19} fill="currentColor" className="ml-0.5" />
+          </span>
         </div>
+        {progressPercent > 0 && !isCompleted && (
+          <div className="absolute inset-x-0 bottom-0 h-1 bg-black/70">
+            <div className="h-full bg-red-500" style={{ width: `${progressPercent}%` }} />
+          </div>
+        )}
+        {isCompleted && (
+          <span className="absolute left-2 top-2 rounded-md bg-black/65 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-zinc-200 backdrop-blur">
+            Assistido
+          </span>
+        )}
       </div>
-
-      {/* Progress Bar */}
+      <h3 className="mt-2.5 line-clamp-2 text-sm font-medium leading-snug text-zinc-300 transition-colors group-hover:text-white">
+        {title}
+      </h3>
       {progressPercent > 0 && !isCompleted && (
-        <div className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 bg-secondary overflow-hidden rounded-full h-1 w-[80%]">
-          <div className="h-full transition-all duration-300 bg-red-400" style={{ width: `${progressPercent}%` }} />
-        </div>
+        <p className="mt-1 text-xs text-zinc-500">{Math.round(progressPercent)}% assistido</p>
       )}
-    </div>
+    </article>
   );
 }
