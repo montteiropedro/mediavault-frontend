@@ -89,7 +89,7 @@ export function ShowModal({ showId }: ShowModalProps) {
         aria-modal="true"
         aria-labelledby="show-modal-title"
         onClick={(event) => event.stopPropagation()}
-        className="flex h-100dvh max-h-none w-full max-w-[1480px] flex-col overflow-hidden border border-white/8 bg-zinc-950 shadow-2xl shadow-black/60 sm:h-full sm:max-h-[min(92dvh,1000px)] sm:rounded-2xl"
+        className="flex h-dvh max-h-none w-full max-w-[1480px] flex-col overflow-hidden border-0 bg-zinc-950 shadow-2xl shadow-black/60 sm:h-full sm:max-h-[min(92dvh,1000px)] sm:rounded-2xl sm:border sm:border-white/8"
       >
         <header className="flex shrink-0 items-center justify-between gap-4 border-b border-white/[0.07] bg-zinc-900/70 px-4 py-4 sm:px-7 sm:py-5">
           <div className="min-w-0">
