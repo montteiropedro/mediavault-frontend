@@ -37,6 +37,7 @@ Screenshots or a short demo video can help visitors see the application before c
 ## Requirements
 
 - Docker (Docker Engine and the Docker Compose plugin), or Node.js 20 and npm.
+- GNU Make, if you want to use the shortcuts in the Makefile.
 - A running MediaVault backend. The frontend uses its API for authentication, library data, playback, and scan progress.
 
 For the complete application, follow the setup instructions in the [backend README](https://github.com/montteiropedro/mediavault-backend). Both Compose projects use the external Docker network named `mediavault`.
@@ -54,19 +55,36 @@ For the complete application, follow the setup instructions in the [backend READ
 
 3. The frontend Compose file joins the same external `mediavault` network as the backend. Create that network once if it does not already exist:
 
-```sh
-docker network create mediavault
-```
+   ```sh
+   make network
+   ```
 
 4. Then configure `.env` as described below and start the frontend:
 
-```sh
-docker compose up --build
-```
+   ```sh
+   make up-build
+   ```
 
 The app is available at `http://localhost:5173` by default. The Compose service bind-mounts the project directory, so install dependencies with `npm install` before starting the container if `node_modules` is not present in the project directory.
 
-Stop the service with `docker compose down`.
+Stop the service with `make down`.
+
+## Make commands
+
+Run `make` or `make help` to list the available Docker Compose shortcuts:
+
+| Command              | Description                                                         |
+| -------------------- | ------------------------------------------------------------------- |
+| `make network`       | Create the shared `mediavault` Docker network if it does not exist. |
+| `make up`            | Start the frontend in the background using the existing image.      |
+| `make up-build`      | Build the frontend image and start the frontend in the background.  |
+| `make build`         | Build the frontend image without starting the container.            |
+| `make down`          | Stop and remove the frontend container.                             |
+| `make logs`          | Follow frontend logs.                                               |
+| `make logs-frontend` | Follow frontend logs.                                               |
+| `make ps`            | Show service status.                                                |
+
+These shortcuts wrap Docker Compose commands. You can also run the corresponding `docker compose` commands directly.
 
 ## Environment variables
 
